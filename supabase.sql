@@ -1,0 +1,9 @@
+-- No tables are required.
+-- Realtime Broadcast works directly on a private channel.
+--
+-- IMPORTANT:
+-- In Supabase Dashboard -> Realtime -> Settings, make sure Realtime is enabled.
+-- This prototype uses a channel named "dot-duel:<room-code>".
+--
+-- For a quick prototype, this is enough. For production, add authentication
+-- and stricter Realtime authorization policies.

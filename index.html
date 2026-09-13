@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dot Duel</title>
+  </head>
+  <body>
+    <main class="app">
+      <header>
+        <div>
+          <h1>Dot Duel</h1>
+          <p id="status">Create a room to start.</p>
+        </div>
+        <div class="room-controls">
+          <button id="create">Create room</button>
+          <input id="room" maxlength="8" placeholder="ROOM CODE" autocomplete="off" />
+          <button id="join">Join</button>
+          <button id="copy" hidden>Copy link</button>
+        </div>
+      </header>
+
+      <section id="game-wrap" class="game-wrap">
+        <canvas id="game" width="900" height="600"></canvas>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
