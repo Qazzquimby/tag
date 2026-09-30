@@ -1,9 +1,11 @@
+import { moveWithCollision } from "./collision.js";
+import { randomFreePosition } from "./map.js";
 import {
   BOOST_MULT,
   CLASS_DEFS,
   DEAD_S,
   PlayerClass,
-  Role,
+  SPAWN_CLEARANCE,
   SPAWN_SAMPLES,
   SPAWN_WARNING_S,
   Status,
@@ -13,7 +15,6 @@ export function createPlayer({
   id,
   name,
   classId = PlayerClass.BALANCED,
-  role = Role.PREY,
   x,
   y,
   isDummy = false,
@@ -22,7 +23,6 @@ export function createPlayer({
     id,
     name,
     classId,
-    role,
     status: Status.ALIVE,
     x,
     y,
@@ -32,6 +32,7 @@ export function createPlayer({
     vy: 0,
     aim: 0,
     score: 0,
+    scoredAt: Date.now(),
     boostLeft: 0,
     stateTimer: 0,
     lastSeen: performance.now(),
@@ -39,38 +40,41 @@ export function createPlayer({
   };
 }
 
-export function updateOwned(player, moveDir, aimTarget, dt, players, world) {
-  if (player.boostLeft > 0) player.boostLeft = Math.max(0, player.boostLeft - dt);
+function updateDead(player, dt, players, world) {
+  player.stateTimer -= dt;
+  if (player.stateTimer > 0) return;
 
-  if (player.status === Status.DEAD) {
-    player.stateTimer -= dt;
-    if (player.stateTimer <= 0) {
-      const spawn = pickSpawn(players, player.id, world);
-      player.x = spawn.x;
-      player.y = spawn.y;
-      player.tx = spawn.x;
-      player.ty = spawn.y;
-      player.status = Status.SPAWNING;
-      player.stateTimer = SPAWN_WARNING_S;
-    }
-    return;
-  }
+  const spawn = pickSpawn(players, player.id, world);
+  player.x = spawn.x;
+  player.y = spawn.y;
+  player.tx = spawn.x;
+  player.ty = spawn.y;
+  player.status = Status.SPAWNING;
+  player.stateTimer = SPAWN_WARNING_S;
+}
 
-  if (player.status === Status.SPAWNING) {
-    player.stateTimer -= dt;
-    if (player.stateTimer <= 0) player.status = Status.ALIVE;
-    return;
-  }
+function updateSpawning(player, dt) {
+  player.stateTimer -= dt;
+  if (player.stateTimer <= 0) player.status = Status.ALIVE;
+}
+
+function applyMovement(player, controls, dt, world) {
+  const def = CLASS_DEFS[player.classId];
+  const boost = player.boostLeft > 0 ? BOOST_MULT : 1;
+  player.aim = Math.atan2(controls.aim.y - player.y, controls.aim.x - player.x);
 
   if (player.isDummy) return;
 
-  const def = CLASS_DEFS[player.classId];
-  const boost = player.boostLeft > 0 ? BOOST_MULT : 1;
+  const thrusting = controls.primary && def.primaryAccel > 0;
+  const accel = thrusting ? def.primaryAccel : def.accel;
+  const friction = thrusting ? 0 : def.friction;
+  const moveX = thrusting ? Math.cos(player.aim) : controls.move.x;
+  const moveY = thrusting ? Math.sin(player.aim) : controls.move.y;
 
-  player.vx += moveDir.x * def.accel * boost * dt;
-  player.vy += moveDir.y * def.accel * boost * dt;
+  player.vx += moveX * accel * boost * dt;
+  player.vy += moveY * accel * boost * dt;
 
-  const damp = Math.exp(-def.friction * dt);
+  const damp = Math.exp(-friction * dt);
   player.vx *= damp;
   player.vy *= damp;
 
@@ -81,28 +85,23 @@ export function updateOwned(player, moveDir, aimTarget, dt, players, world) {
     player.vy = (player.vy / speed) * maxSpeed;
   }
 
-  player.x += player.vx * dt;
-  player.y += player.vy * dt;
+  moveWithCollision(player, def.radius, dt, world.map);
+}
 
-  const min = def.radius;
-  if (player.x < min) {
-    player.x = min;
-    player.vx = 0;
-  }
-  if (player.x > world.W - min) {
-    player.x = world.W - min;
-    player.vx = 0;
-  }
-  if (player.y < min) {
-    player.y = min;
-    player.vy = 0;
-  }
-  if (player.y > world.H - min) {
-    player.y = world.H - min;
-    player.vy = 0;
+export function updateOwned(player, controls, dt, players, world) {
+  if (player.boostLeft > 0) player.boostLeft = Math.max(0, player.boostLeft - dt);
+
+  if (player.status === Status.DEAD) {
+    updateDead(player, dt, players, world);
+    return;
   }
 
-  player.aim = Math.atan2(aimTarget.y - player.y, aimTarget.x - player.x);
+  if (player.status === Status.SPAWNING) {
+    updateSpawning(player, dt);
+    return;
+  }
+
+  applyMovement(player, controls, dt, world);
 }
 
 export function kill(player) {
@@ -110,29 +109,33 @@ export function kill(player) {
   player.stateTimer = DEAD_S;
   player.vx = 0;
   player.vy = 0;
-  player.role = player.isDummy ? Role.PREY : Role.PREDATOR;
+}
+
+export function addScore(player, points) {
+  player.score += points;
+  player.scoredAt = Date.now();
 }
 
 export function pickSpawn(players, selfId, world) {
   const others = [];
-  for (const p of players.values()) {
-    if (p.id === selfId || p.status === Status.DEAD) continue;
-    others.push(p);
+  for (const player of players.values()) {
+    if (player.id !== selfId && player.status !== Status.DEAD) others.push(player);
   }
 
-  let best = { x: world.W / 2, y: world.H / 2 };
+  let best = randomFreePosition(world, SPAWN_CLEARANCE);
   let bestDistance = -1;
 
   for (let i = 0; i < SPAWN_SAMPLES; i++) {
-    const x = 60 + Math.random() * (world.W - 120);
-    const y = 60 + Math.random() * (world.H - 120);
+    const candidate = randomFreePosition(world, SPAWN_CLEARANCE);
     let nearest = Infinity;
+
     for (const other of others) {
-      nearest = Math.min(nearest, Math.hypot(other.x - x, other.y - y));
+      nearest = Math.min(nearest, Math.hypot(other.x - candidate.x, other.y - candidate.y));
     }
+
     if (nearest > bestDistance) {
       bestDistance = nearest;
-      best = { x, y };
+      best = candidate;
     }
   }
 
@@ -150,12 +153,12 @@ export function toStatePayload(player) {
     id: player.id,
     name: player.name,
     classId: player.classId,
-    role: player.role,
     status: player.status,
     x: player.x,
     y: player.y,
     aim: player.aim,
     score: player.score,
+    scoredAt: player.scoredAt,
   };
 }
 
@@ -164,10 +167,10 @@ export function applyStatePayload(player, payload) {
 
   player.name = payload.name;
   player.classId = payload.classId;
-  player.role = payload.role;
   player.status = payload.status;
   player.aim = payload.aim;
   player.score = payload.score;
+  player.scoredAt = payload.scoredAt;
   player.tx = payload.x;
   player.ty = payload.y;
   player.lastSeen = performance.now();

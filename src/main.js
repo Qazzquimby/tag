@@ -1,5 +1,5 @@
 import "./style.css";
-import { NetEvent, Role } from "./config.js";
+import { NetEvent, PlayerClass, Status } from "./config.js";
 import {
   createGame,
   handleBye,
@@ -13,6 +13,8 @@ import {
   updateGame,
 } from "./game.js";
 import { createInput } from "./input.js";
+import { createMap } from "./map.js";
+import { createClassPicker, renderScoreboard } from "./hud.js";
 import { getRoomCode, joinRoom, leaveRoom, send } from "./net.js";
 import { computeStandings, createRankTracker } from "./scoreboard.js";
 import { draw } from "./render.js";
@@ -20,12 +22,19 @@ import { draw } from "./render.js";
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 const statusEl = document.querySelector("#status");
+const nameInput = document.querySelector("#name");
 const roomInput = document.querySelector("#room");
 const createBtn = document.querySelector("#create");
 const joinBtn = document.querySelector("#join");
 const copyBtn = document.querySelector("#copy");
+const scoreboardEl = document.querySelector("#scoreboard");
+const classPickerEl = document.querySelector("#class-picker");
 
-const world = { W: canvas.width, H: canvas.height };
+const world = {
+  W: canvas.width,
+  H: canvas.height,
+  map: createMap(canvas.width, canvas.height),
+};
 const playerId = crypto.randomUUID();
 const tracker = createRankTracker();
 const net = { send };
@@ -33,6 +42,7 @@ const net = { send };
 let game = null;
 let errorText = "";
 let lastFrame = performance.now();
+let selectedClass = PlayerClass.BALANCED;
 
 const NAME_KEY = "dot-duel:name";
 
@@ -44,24 +54,23 @@ function makeRoomCode() {
   return Math.random().toString(36).slice(2, 8).toUpperCase();
 }
 
+function chooseClass(classId) {
+  if (game) {
+    const me = game.players.get(game.localId);
+    if (me.status === Status.ALIVE) return;
+    me.classId = classId;
+  }
+  selectedClass = classId;
+}
+
 const input = createInput(canvas, world, {
-  selectClass(classId) {
-    if (game) game.players.get(game.localId).classId = classId;
-  },
+  selectClass: chooseClass,
   toggleDummy() {
     if (game) toggleDummy(game);
   },
-  rename() {
-    if (!game) return;
-    const me = game.players.get(game.localId);
-    const next = window.prompt("Display name (max 8 characters)", me.name);
-    if (next === null) return;
-    const trimmed = next.trim().slice(0, 8);
-    if (!trimmed) return;
-    me.name = trimmed;
-    localStorage.setItem(NAME_KEY, trimmed);
-  },
 });
+
+const updateClassPicker = createClassPicker(classPickerEl, chooseClass);
 
 function updateStatus() {
   if (errorText) {
@@ -73,17 +82,19 @@ function updateStatus() {
     return;
   }
 
-  const me = game.players.get(game.localId);
-  const role = me.role === Role.PREDATOR ? "Predator" : "Prey";
   const count = game.players.size;
   const waiting = count === 1 ? " · Waiting for another player…" : "";
-  statusEl.textContent = `Room ${getRoomCode()} · ${role} · ${count} player${count === 1 ? "" : "s"}${waiting}`;
+  statusEl.textContent = `Room ${getRoomCode()} · ${count} player${count === 1 ? "" : "s"}${waiting}`;
 }
 
 async function enterRoom(code) {
   errorText = "";
   await leaveRoom();
-  game = createGame(playerId, world, loadName());
+
+  const name = (nameInput.value.trim().slice(0, 8) || loadName().trim().slice(0, 8));
+  nameInput.value = name;
+  localStorage.setItem(NAME_KEY, name);
+  game = createGame(playerId, world, name, selectedClass);
 
   await joinRoom(
     code,
@@ -111,9 +122,12 @@ function frame(now) {
   if (game) {
     updateGame(game, input, dt, net);
     const standings = computeStandings(game.players, tracker, game.localId, now);
-    draw(ctx, world, game, standings, now);
+    renderScoreboard(scoreboardEl, standings);
+    draw(ctx, world, game, now);
   }
 
+  const me = game ? game.players.get(game.localId) : null;
+  updateClassPicker(!me || me.status !== Status.ALIVE, selectedClass);
   updateStatus();
   requestAnimationFrame(frame);
 }
@@ -141,6 +155,8 @@ copyBtn.addEventListener("click", async () => {
   copyBtn.textContent = "Copied!";
   setTimeout(() => (copyBtn.textContent = "Copy link"), 1200);
 });
+
+nameInput.value = loadName();
 
 const initialRoom = new URLSearchParams(location.search).get("room");
 if (initialRoom) {

@@ -1,29 +1,24 @@
-import { RANK_FLASH_S, Relation } from "./config.js";
+import { RANK_FLASH_S } from "./config.js";
+import { relationTo, compareRank } from "./ranking.js";
 
 export function createRankTracker() {
   return new Map();
 }
 
 export function computeStandings(players, tracker, localId, now) {
-  const sorted = [...players.values()].sort(
-    (a, b) => b.score - a.score || (a.id < b.id ? -1 : 1),
-  );
+  const localPlayer = players.get(localId);
+  const sorted = [...players.values()]
+    .filter((player) => !player.isDummy)
+    .sort(compareRank);
 
-  const rows = [];
-  let myRank = 0;
-
-  sorted.forEach((player, index) => {
-    const rank = index + 1;
-    if (player.id === localId) myRank = rank;
-    rows.push({
-      id: player.id,
-      name: player.name,
-      score: player.score,
-      rank,
-      delta: 0,
-      relation: Relation.SELF,
-    });
-  });
+  const rows = sorted.map((player, index) => ({
+    id: player.id,
+    name: player.name,
+    score: player.score,
+    rank: index + 1,
+    delta: 0,
+    relation: localPlayer ? relationTo(localPlayer, player) : undefined,
+  }));
 
   for (const row of rows) {
     const previous = tracker.get(row.id);
@@ -43,8 +38,9 @@ export function computeStandings(players, tracker, localId, now) {
       row.id === localId ? Relation.SELF : row.rank < myRank ? Relation.ABOVE : Relation.BELOW;
   }
 
+  const displayedIds = new Set(rows.map((row) => row.id));
   for (const id of tracker.keys()) {
-    if (!players.has(id)) tracker.delete(id);
+    if (!displayedIds.has(id)) tracker.delete(id);
   }
 
   return rows;

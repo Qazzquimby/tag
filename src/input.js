@@ -6,6 +6,7 @@ export function createInput(canvas, world, actions) {
   const keys = new Set();
   const mouse = { x: world.W / 2, y: world.H / 2 };
   const move = { x: 0, y: 0 };
+  const controls = { move, aim: mouse, primary: false };
 
   function isTyping(event) {
     const target = event.target;
@@ -23,6 +24,14 @@ export function createInput(canvas, world, actions) {
 
   canvas.addEventListener("mousemove", updateMouse);
 
+  canvas.addEventListener("mousedown", (event) => {
+    if (event.button === 0) controls.primary = true;
+  });
+
+  window.addEventListener("mouseup", (event) => {
+    if (event.button === 0) controls.primary = false;
+  });
+
   window.addEventListener("keydown", (event) => {
     if (isTyping(event)) return;
     keys.add(event.code);
@@ -33,8 +42,6 @@ export function createInput(canvas, world, actions) {
       if (index >= 0 && index < CLASS_ORDER.length) actions.selectClass(CLASS_ORDER[index]);
     } else if (event.code === "KeyB") {
       actions.toggleDummy();
-    } else if (event.code === "KeyN") {
-      actions.rename();
     }
   });
 
@@ -44,9 +51,10 @@ export function createInput(canvas, world, actions) {
 
   window.addEventListener("blur", () => {
     keys.clear();
+    controls.primary = false;
   });
 
-  function getMove() {
+  function getControls() {
     let x = 0;
     let y = 0;
     if (keys.has("KeyA")) x -= 1;
@@ -60,8 +68,8 @@ export function createInput(canvas, world, actions) {
     }
     move.x = x;
     move.y = y;
-    return move;
+    return controls;
   }
 
-  return { getMove, mouse };
+  return { getControls };
 }

@@ -1,4 +1,5 @@
-import { FOOD_WARNING_S } from "./config.js";
+import { FOOD_RADIUS, FOOD_WARNING_S } from "./config.js";
+import { randomFreePosition } from "./map.js";
 
 export function createFood(id, x, y, warningLeft = FOOD_WARNING_S) {
   return { id, x, y, warningLeft };
@@ -15,8 +16,5 @@ export function isEdible(food) {
 }
 
 export function randomFoodPosition(world) {
-  return {
-    x: 60 + Math.random() * (world.W - 120),
-    y: 60 + Math.random() * (world.H - 120),
-  };
+  return randomFreePosition(world, FOOD_RADIUS);
 }

@@ -13,6 +13,7 @@
           <p id="status">Create a room to start.</p>
         </div>
         <div class="room-controls">
+          <input id="name" maxlength="8" placeholder="NAME" autocomplete="off" />
           <button id="create">Create room</button>
           <input id="room" maxlength="8" placeholder="ROOM CODE" autocomplete="off" />
           <button id="join">Join</button>
@@ -21,7 +22,15 @@
       </header>
 
       <section id="game-wrap" class="game-wrap">
-        <canvas id="game" width="900" height="600"></canvas>
+        <div class="play-area">
+          <canvas id="game" width="900" height="600"></canvas>
+          <div id="class-picker" class="class-picker"></div>
+          <p class="hint">WASD move · Scout: hold mouse to thrust toward cursor · 1-3 pick class when joining/respawning · B dummy</p>
+        </div>
+        <aside class="sidebar">
+          <h2>Scoreboard</h2>
+          <ol id="scoreboard"></ol>
+        </aside>
       </section>
     </main>
     <script type="module" src="/src/main.js"></script>

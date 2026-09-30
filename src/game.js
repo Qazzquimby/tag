@@ -6,8 +6,7 @@ import {
   FOOD_RADIUS,
   NetEvent,
   PlayerClass,
-  ROLE_GRACE_S,
-  Role,
+  Relation,
   SCORE_FOOD,
   SCORE_PLAYER,
   SEND_HZ,
@@ -16,6 +15,7 @@ import {
 } from "./config.js";
 import { createFood, isEdible, randomFoodPosition, updateFoods } from "./food.js";
 import {
+  addScore,
   applyStatePayload,
   createPlayer,
   kill,
@@ -24,19 +24,23 @@ import {
   toStatePayload,
   updateOwned,
 } from "./player.js";
+import { relationTo } from "./ranking.js";
 
 export const DUMMY_ID = "dummy";
 
-const NO_MOVE = { x: 0, y: 0 };
+const NO_CONTROLS = {
+  move: { x: 0, y: 0 },
+  aim: { x: 0, y: 0 },
+  primary: false,
+};
 
-export function createGame(localId, world, name) {
+export function createGame(localId, world, name, classId = PlayerClass.BALANCED) {
   const game = {
     localId,
     world,
     players: new Map(),
     foods: new Map(),
     foodTimer: FOOD_INTERVAL_S,
-    noPredatorFor: 0,
     lastSent: 0,
     nextFoodId: 1,
   };
@@ -47,8 +51,7 @@ export function createGame(localId, world, name) {
     createPlayer({
       id: localId,
       name,
-      classId: PlayerClass.BALANCED,
-      role: Role.PREY,
+      classId,
       x: spawn.x,
       y: spawn.y,
     }),
@@ -59,10 +62,11 @@ export function createGame(localId, world, name) {
 
 export function updateGame(game, input, dt, net) {
   const me = game.players.get(game.localId);
-  updateOwned(me, input.getMove(), input.mouse, dt, game.players, game.world);
+  const controls = input.getControls();
+  updateOwned(me, controls, dt, game.players, game.world);
 
   const dummy = game.players.get(DUMMY_ID);
-  if (dummy) updateOwned(dummy, NO_MOVE, input.mouse, dt, game.players, game.world);
+  if (dummy) updateOwned(dummy, NO_CONTROLS, dt, game.players, game.world);
 
   const now = performance.now();
   for (const [id, player] of game.players) {
@@ -71,15 +75,13 @@ export function updateGame(game, input, dt, net) {
     if (now - player.lastSeen > STALE_S * 1000) game.players.delete(id);
   }
 
-  if (me.status === Status.ALIVE && me.role === Role.PREDATOR) {
+  if (me.status === Status.ALIVE) {
     catchPlayers(game, me, net);
-    if (me.role === Role.PREDATOR) catchFood(game, me, net);
+    catchFood(game, me, net);
   }
 
   updateFoods(game.foods, dt);
   if (isHost(game)) spawnFood(game, dt, net);
-
-  electPredator(game, dt);
 
   if (now - game.lastSent >= 1000 / SEND_HZ) {
     game.lastSent = now;
@@ -93,19 +95,16 @@ function catchPlayers(game, me, net) {
   for (const [id, other] of game.players) {
     if (id === game.localId) continue;
     if (other.status !== Status.ALIVE) continue;
+    if (relationTo(me, other) !== Relation.ABOVE) continue;
 
     const reach = myRadius + CLASS_DEFS[other.classId].radius;
     if (Math.hypot(other.x - me.x, other.y - me.y) > reach) continue;
 
-    me.score += SCORE_PLAYER;
+    addScore(me, SCORE_PLAYER);
     me.boostLeft = BOOST_S;
     kill(other);
 
-    if (other.isDummy) continue;
-
-    me.role = Role.PREY;
-    net.send(NetEvent.CATCH, { victim: other.id });
-    return;
+    if (!other.isDummy) net.send(NetEvent.CATCH, { victim: other.id });
   }
 }
 
@@ -117,7 +116,7 @@ function catchFood(game, me, net) {
     if (Math.hypot(food.x - me.x, food.y - me.y) > myRadius + FOOD_RADIUS) continue;
 
     game.foods.delete(id);
-    me.score += SCORE_FOOD;
+    addScore(me, SCORE_FOOD);
     me.boostLeft = BOOST_S;
     net.send(NetEvent.FOOD_EATEN, { id });
   }
@@ -144,21 +143,6 @@ function spawnFood(game, dt, net) {
   net.send(NetEvent.FOOD_SPAWN, { id, x: position.x, y: position.y });
 }
 
-function electPredator(game, dt) {
-  for (const player of game.players.values()) {
-    if (player.role === Role.PREDATOR) {
-      game.noPredatorFor = 0;
-      return;
-    }
-  }
-
-  game.noPredatorFor += dt;
-  if (game.noPredatorFor < ROLE_GRACE_S) return;
-  if (!isHost(game)) return;
-
-  const me = game.players.get(game.localId);
-  if (me.status === Status.ALIVE) me.role = Role.PREDATOR;
-}
 
 export function toggleDummy(game) {
   if (game.players.has(DUMMY_ID)) {
@@ -173,7 +157,6 @@ export function toggleDummy(game) {
       id: DUMMY_ID,
       name: "DUMMY",
       classId: PlayerClass.BALANCED,
-      role: Role.PREY,
       x: spawn.x,
       y: spawn.y,
       isDummy: true,
@@ -190,7 +173,6 @@ export function handleState(game, payload) {
       id: payload.id,
       name: payload.name,
       classId: payload.classId,
-      role: payload.role,
       x: payload.x,
       y: payload.y,
     });

@@ -1,7 +1,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; min-height: 100%; background: #111; color: #eee; font-family: system-ui, sans-serif; }
 body { display: flex; justify-content: center; }
-.app { width: min(1100px, 100%); padding: 24px; }
+.app { width: min(1200px, 100%); padding: 24px; }
 header { display: flex; gap: 24px; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 h1 { margin: 0; font-size: 24px; }
 p { margin: 4px 0 0; color: #aaa; }
@@ -10,10 +10,21 @@ button, input { border: 1px solid #444; background: #1d1d1d; color: #eee; border
 button { cursor: pointer; }
 button:hover { background: #292929; }
 input { width: 130px; text-transform: uppercase; }
-.game-wrap { position: relative; width: 100%; }
-canvas { display: block; width: 100%; height: auto; border: 1px solid #333; border-radius: 12px; background: #181818; cursor: crosshair; }
-.hint { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); color: #888; font-size: 13px; pointer-events: none; }
+#name { text-transform: none; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+button[aria-pressed="true"] { border-color: #5bc8ff; background: #1b2a33; }
+.game-wrap { display: flex; gap: 16px; width: 100%; align-items: flex-start; }
+.play-area { flex: 1; min-width: 0; }
+canvas { display: block; width: 100%; height: auto; min-width: 0; border: 1px solid #333; border-radius: 12px; background: #181818; cursor: crosshair; }
+.class-picker { display: flex; gap: 8px; margin-top: 12px; }
+.hint { color: #888; font-size: 13px; }
+.sidebar { width: 200px; flex: none; }
+.sidebar h2 { margin: 0 0 8px; font-size: 16px; }
+#scoreboard { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+#scoreboard li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 6px; color: #111; font-weight: 600; }
 @media (max-width: 700px) {
   header { align-items: flex-start; flex-direction: column; }
   .room-controls { justify-content: flex-start; }
+  .game-wrap { flex-direction: column; }
+  .sidebar { width: 100%; }
 }
