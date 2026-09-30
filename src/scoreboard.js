@@ -1,4 +1,4 @@
-import { RANK_FLASH_S } from "./config.js";
+import {RANK_FLASH_S, Relation} from "./config.js";
 import { relationTo, compareRank } from "./ranking.js";
 
 export function createRankTracker() {
