@@ -101,8 +101,8 @@ export const FOOD_INTERVAL_S = 3;
 export const FOOD_MAX = 8;
 export const FOOD_RADIUS = 7;
 
-export const BOOST_S = 2;
-export const BOOST_MULT = 1.5;
+export const BOOST_S = 0;
+export const BOOST_MULT = 1.0;
 
 export const SEND_HZ = 10;
 export const STALE_S = 5;
