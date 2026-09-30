@@ -23,12 +23,16 @@
 
       <section id="game-wrap" class="game-wrap">
         <div class="play-area">
-          <canvas id="game" width="900" height="600"></canvas>
+          <div class="canvas-wrap">
+            <canvas id="game" width="900" height="600"></canvas>
+            <div id="round-banner" class="round-banner" hidden></div>
+          </div>
           <div id="class-picker" class="class-picker"></div>
-          <p class="hint">WASD move · Scout: hold mouse to thrust toward cursor · 1-3 pick class when joining/respawning · B dummy</p>
+          <p class="hint">WASD move · Scout: hold mouse to thrust toward cursor · Choose a class with 1-3 or the buttons before first spawn · B dummy</p>
         </div>
         <aside class="sidebar">
           <h2>Scoreboard</h2>
+          <p id="round-timer" class="round-timer"></p>
           <ol id="scoreboard"></ol>
         </aside>
       </section>

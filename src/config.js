@@ -1,4 +1,4 @@
-export const Status = Object.freeze({ ALIVE: 0, DEAD: 1, SPAWNING: 2 });
+export const Status = Object.freeze({ ALIVE: 0, DEAD: 1, SPAWNING: 2, CHOOSING: 3 });
 export const PlayerClass = Object.freeze({ BALANCED: 0, SCOUT: 1, TANK: 2 });
 export const Shape = Object.freeze({ CIRCLE: 0, SQUARE: 1, TRIANGLE: 2 });
 export const Relation = Object.freeze({ SELF: 0, ABOVE: 1, BELOW: 2 });
@@ -93,6 +93,9 @@ export const SCORE_FOOD = 6;
 export const DEAD_S = 3;
 export const SPAWN_WARNING_S = 1.5;
 export const FOOD_WARNING_S = 1.5;
+
+export const ROUND_S = 120;
+export const ROUND_RESULT_S = 5;
 
 export const FOOD_INTERVAL_S = 3;
 export const FOOD_MAX = 8;

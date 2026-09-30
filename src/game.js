@@ -7,6 +7,8 @@ import {
   NetEvent,
   PlayerClass,
   Relation,
+  ROUND_RESULT_S,
+  ROUND_S,
   SCORE_FOOD,
   SCORE_PLAYER,
   SEND_HZ,
@@ -20,11 +22,13 @@ import {
   createPlayer,
   kill,
   pickSpawn,
+  respawn,
   smoothRemote,
+  startRound,
   toStatePayload,
   updateOwned,
 } from "./player.js";
-import { relationTo } from "./ranking.js";
+import { compareRank, relationTo } from "./ranking.js";
 
 export const DUMMY_ID = "dummy";
 
@@ -34,7 +38,7 @@ const NO_CONTROLS = {
   primary: false,
 };
 
-export function createGame(localId, world, name, classId = PlayerClass.BALANCED) {
+export function createGame(localId, world, name) {
   const game = {
     localId,
     world,
@@ -43,6 +47,8 @@ export function createGame(localId, world, name, classId = PlayerClass.BALANCED)
     foodTimer: FOOD_INTERVAL_S,
     lastSent: 0,
     nextFoodId: 1,
+    roundStartedAt: Date.now(),
+    roundResult: null,
   };
 
   const spawn = pickSpawn(game.players, localId, world);
@@ -51,13 +57,54 @@ export function createGame(localId, world, name, classId = PlayerClass.BALANCED)
     createPlayer({
       id: localId,
       name,
-      classId,
+      status: Status.CHOOSING,
       x: spawn.x,
       y: spawn.y,
     }),
   );
 
   return game;
+}
+
+export function selectClass(game, classId) {
+  const me = game.players.get(game.localId);
+  if (me.status === Status.ALIVE) return;
+
+  me.classId = classId;
+  if (me.status === Status.CHOOSING) respawn(me, game.players, game.world);
+}
+
+function sendState(game, net) {
+  const me = game.players.get(game.localId);
+  if (me.status === Status.CHOOSING) return;
+  net.send(NetEvent.STATE, toStatePayload(me));
+}
+
+export function roundSecondsLeft(game) {
+  return Math.max(
+    0,
+    Math.ceil((ROUND_S * 1000 - (Date.now() - game.roundStartedAt)) / 1000),
+  );
+}
+
+function updateRound(game) {
+  const elapsed = Date.now() - game.roundStartedAt;
+  const roundMs = ROUND_S * 1000;
+  if (elapsed < roundMs) return;
+
+  const winner = [...game.players.values()].sort(compareRank)[0];
+  game.roundResult = {
+    winnerName: winner && winner.score > 0 ? winner.name : null,
+    winnerScore: winner?.score ?? 0,
+    until: performance.now() + ROUND_RESULT_S * 1000,
+  };
+  game.roundStartedAt += Math.floor(elapsed / roundMs) * roundMs;
+
+  for (const player of [game.players.get(game.localId), game.players.get(DUMMY_ID)]) {
+    if (player && player.status !== Status.CHOOSING) {
+      startRound(player, game.players, game.world);
+    }
+  }
 }
 
 export function updateGame(game, input, dt, net) {
@@ -67,6 +114,7 @@ export function updateGame(game, input, dt, net) {
 
   const dummy = game.players.get(DUMMY_ID);
   if (dummy) updateOwned(dummy, NO_CONTROLS, dt, game.players, game.world);
+  updateRound(game);
 
   const now = performance.now();
   for (const [id, player] of game.players) {
@@ -75,9 +123,10 @@ export function updateGame(game, input, dt, net) {
     if (now - player.lastSeen > STALE_S * 1000) game.players.delete(id);
   }
 
-  if (me.status === Status.ALIVE) {
-    catchPlayers(game, me, net);
-    catchFood(game, me, net);
+  for (const player of [me, dummy]) {
+    if (!player || player.status !== Status.ALIVE) continue;
+    catchPlayers(game, player, net);
+    catchFood(game, player, net);
   }
 
   updateFoods(game.foods, dt);
@@ -85,39 +134,39 @@ export function updateGame(game, input, dt, net) {
 
   if (now - game.lastSent >= 1000 / SEND_HZ) {
     game.lastSent = now;
-    net.send(NetEvent.STATE, toStatePayload(me));
+    sendState(game, net);
   }
 }
 
-function catchPlayers(game, me, net) {
-  const myRadius = CLASS_DEFS[me.classId].radius;
+function catchPlayers(game, catcher, net) {
+  const myRadius = CLASS_DEFS[catcher.classId].radius;
 
-  for (const [id, other] of game.players) {
-    if (id === game.localId) continue;
+  for (const other of game.players.values()) {
+    if (other === catcher) continue;
     if (other.status !== Status.ALIVE) continue;
-    if (relationTo(me, other) !== Relation.ABOVE) continue;
+    if (relationTo(catcher, other) !== Relation.ABOVE) continue;
 
     const reach = myRadius + CLASS_DEFS[other.classId].radius;
-    if (Math.hypot(other.x - me.x, other.y - me.y) > reach) continue;
+    if (Math.hypot(other.x - catcher.x, other.y - catcher.y) > reach) continue;
 
-    addScore(me, SCORE_PLAYER);
-    me.boostLeft = BOOST_S;
+    addScore(catcher, SCORE_PLAYER);
+    catcher.boostLeft = BOOST_S;
     kill(other);
 
     if (!other.isDummy) net.send(NetEvent.CATCH, { victim: other.id });
   }
 }
 
-function catchFood(game, me, net) {
-  const myRadius = CLASS_DEFS[me.classId].radius;
+function catchFood(game, catcher, net) {
+  const myRadius = CLASS_DEFS[catcher.classId].radius;
 
   for (const [id, food] of game.foods) {
     if (!isEdible(food)) continue;
-    if (Math.hypot(food.x - me.x, food.y - me.y) > myRadius + FOOD_RADIUS) continue;
+    if (Math.hypot(food.x - catcher.x, food.y - catcher.y) > myRadius + FOOD_RADIUS) continue;
 
     game.foods.delete(id);
-    addScore(me, SCORE_FOOD);
-    me.boostLeft = BOOST_S;
+    addScore(catcher, SCORE_FOOD);
+    catcher.boostLeft = BOOST_S;
     net.send(NetEvent.FOOD_EATEN, { id });
   }
 }
@@ -204,6 +253,7 @@ export function handleFoodEaten(game, payload) {
 }
 
 export function handleFoodSync(game, payload) {
+  game.roundStartedAt = payload.roundStartedAt;
   for (const food of payload.foods) {
     if (game.foods.has(food.id)) continue;
     game.foods.set(food.id, createFood(food.id, food.x, food.y, 0));
@@ -211,10 +261,11 @@ export function handleFoodSync(game, payload) {
 }
 
 export function handleHello(game, net) {
-  net.send(NetEvent.STATE, toStatePayload(game.players.get(game.localId)));
+  sendState(game, net);
   if (!isHost(game)) return;
 
   net.send(NetEvent.FOOD_SYNC, {
+    roundStartedAt: game.roundStartedAt,
     foods: [...game.foods.values()].map((food) => ({ id: food.id, x: food.x, y: food.y })),
   });
 }

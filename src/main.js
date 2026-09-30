@@ -1,5 +1,5 @@
 import "./style.css";
-import { NetEvent, PlayerClass, Status } from "./config.js";
+import { NetEvent, Status } from "./config.js";
 import {
   createGame,
   handleBye,
@@ -9,12 +9,19 @@ import {
   handleFoodSync,
   handleHello,
   handleState,
+  roundSecondsLeft,
+  selectClass,
   toggleDummy,
   updateGame,
 } from "./game.js";
 import { createInput } from "./input.js";
 import { createMap } from "./map.js";
-import { createClassPicker, renderScoreboard } from "./hud.js";
+import {
+  createClassPicker,
+  renderRoundResult,
+  renderRoundTimer,
+  renderScoreboard,
+} from "./hud.js";
 import { getRoomCode, joinRoom, leaveRoom, send } from "./net.js";
 import { computeStandings, createRankTracker } from "./scoreboard.js";
 import { draw } from "./render.js";
@@ -29,6 +36,8 @@ const joinBtn = document.querySelector("#join");
 const copyBtn = document.querySelector("#copy");
 const scoreboardEl = document.querySelector("#scoreboard");
 const classPickerEl = document.querySelector("#class-picker");
+const roundTimerEl = document.querySelector("#round-timer");
+const roundBannerEl = document.querySelector("#round-banner");
 
 const world = {
   W: canvas.width,
@@ -42,7 +51,6 @@ const net = { send };
 let game = null;
 let errorText = "";
 let lastFrame = performance.now();
-let selectedClass = PlayerClass.BALANCED;
 
 const NAME_KEY = "dot-duel:name";
 
@@ -55,12 +63,7 @@ function makeRoomCode() {
 }
 
 function chooseClass(classId) {
-  if (game) {
-    const me = game.players.get(game.localId);
-    if (me.status === Status.ALIVE) return;
-    me.classId = classId;
-  }
-  selectedClass = classId;
+  if (game) selectClass(game, classId);
 }
 
 const input = createInput(canvas, world, {
@@ -94,7 +97,7 @@ async function enterRoom(code) {
   const name = (nameInput.value.trim().slice(0, 8) || loadName().trim().slice(0, 8));
   nameInput.value = name;
   localStorage.setItem(NAME_KEY, name);
-  game = createGame(playerId, world, name, selectedClass);
+  game = createGame(playerId, world, name);
 
   await joinRoom(
     code,
@@ -123,11 +126,15 @@ function frame(now) {
     updateGame(game, input, dt, net);
     const standings = computeStandings(game.players, tracker, game.localId, now);
     renderScoreboard(scoreboardEl, standings);
+    renderRoundTimer(roundTimerEl, roundSecondsLeft(game));
+    renderRoundResult(roundBannerEl, game.roundResult, now);
     draw(ctx, world, game, now);
   }
 
   const me = game ? game.players.get(game.localId) : null;
-  updateClassPicker(!me || me.status !== Status.ALIVE, selectedClass);
+  const choosing = me?.status === Status.CHOOSING;
+  const selectedClass = choosing ? null : me?.classId;
+  updateClassPicker(Boolean(me && me.status !== Status.ALIVE), selectedClass);
   updateStatus();
   requestAnimationFrame(frame);
 }

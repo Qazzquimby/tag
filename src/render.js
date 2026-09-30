@@ -22,6 +22,7 @@ export function draw(ctx, world, game, now) {
   }
 
   for (const player of game.players.values()) {
+    if (player.status === Status.CHOOSING) continue;
     if (player.id === game.localId || hasLineOfSight(world.map, me, player)) {
       drawPlayer(ctx, player, me, now);
     }
@@ -179,11 +180,15 @@ function drawLabel(ctx, player, def) {
 function drawOverlay(ctx, world, game) {
   const me = game.players.get(game.localId);
 
-  if (me && me.status === Status.DEAD) {
+  if (me && me.status === Status.CHOOSING) {
+    ctx.font = "bold 20px system-ui";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fff";
+    ctx.fillText("Choose a class (1-3)", world.W / 2, world.H / 2);
+  } else if (me && me.status === Status.DEAD) {
     ctx.font = "bold 20px system-ui";
     ctx.textAlign = "center";
     ctx.fillStyle = "#ff4d4d";
     ctx.fillText("Caught! Respawning…", world.W / 2, world.H / 2);
   }
-
 }

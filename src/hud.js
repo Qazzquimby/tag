@@ -25,6 +25,24 @@ export function renderScoreboard(listEl, standings) {
   listEl.replaceChildren(...rows);
 }
 
+export function renderRoundTimer(element, secondsLeft) {
+  const minutes = Math.floor(secondsLeft / 60);
+  const seconds = secondsLeft % 60;
+  element.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+export function renderRoundResult(element, result, now) {
+  if (!result || now >= result.until) {
+    element.hidden = true;
+    return;
+  }
+
+  element.textContent = result.winnerName
+    ? `${result.winnerName} wins with ${result.winnerScore}`
+    : "Round over – no winner";
+  element.hidden = false;
+}
+
 export function createClassPicker(container, onSelect) {
   const buttons = new Map();
 

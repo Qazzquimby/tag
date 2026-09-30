@@ -18,12 +18,13 @@ export function createPlayer({
   x,
   y,
   isDummy = false,
+  status = Status.ALIVE,
 }) {
   return {
     id,
     name,
     classId,
-    status: Status.ALIVE,
+    status,
     x,
     y,
     tx: x,
@@ -40,10 +41,7 @@ export function createPlayer({
   };
 }
 
-function updateDead(player, dt, players, world) {
-  player.stateTimer -= dt;
-  if (player.stateTimer > 0) return;
-
+export function respawn(player, players, world) {
   const spawn = pickSpawn(players, player.id, world);
   player.x = spawn.x;
   player.y = spawn.y;
@@ -51,6 +49,12 @@ function updateDead(player, dt, players, world) {
   player.ty = spawn.y;
   player.status = Status.SPAWNING;
   player.stateTimer = SPAWN_WARNING_S;
+}
+
+function updateDead(player, dt, players, world) {
+  player.stateTimer -= dt;
+  if (player.stateTimer > 0) return;
+  respawn(player, players, world);
 }
 
 function updateSpawning(player, dt) {
@@ -62,8 +66,6 @@ function applyMovement(player, controls, dt, world) {
   const def = CLASS_DEFS[player.classId];
   const boost = player.boostLeft > 0 ? BOOST_MULT : 1;
   player.aim = Math.atan2(controls.aim.y - player.y, controls.aim.x - player.x);
-
-  if (player.isDummy) return;
 
   const thrusting = controls.primary && def.primaryAccel > 0;
   const accel = thrusting ? def.primaryAccel : def.accel;
@@ -109,6 +111,15 @@ export function kill(player) {
   player.stateTimer = DEAD_S;
   player.vx = 0;
   player.vy = 0;
+}
+
+export function startRound(player, players, world) {
+  player.score = 0;
+  player.scoredAt = Date.now();
+  player.boostLeft = 0;
+  player.vx = 0;
+  player.vy = 0;
+  respawn(player, players, world);
 }
 
 export function addScore(player, points) {

@@ -1,4 +1,4 @@
-import {RANK_FLASH_S, Relation} from "./config.js";
+import { RANK_FLASH_S } from "./config.js";
 import { relationTo, compareRank } from "./ranking.js";
 
 export function createRankTracker() {
@@ -7,9 +7,7 @@ export function createRankTracker() {
 
 export function computeStandings(players, tracker, localId, now) {
   const localPlayer = players.get(localId);
-  const sorted = [...players.values()]
-    .filter((player) => !player.isDummy)
-    .sort(compareRank);
+  const sorted = [...players.values()].sort(compareRank);
 
   const rows = sorted.map((player, index) => ({
     id: player.id,
@@ -34,8 +32,6 @@ export function computeStandings(players, tracker, localId, now) {
 
     const entry = tracker.get(row.id);
     if (entry.flashUntil > now) row.delta = entry.delta;
-    row.relation =
-      row.id === localId ? Relation.SELF : row.rank < myRank ? Relation.ABOVE : Relation.BELOW;
   }
 
   const displayedIds = new Set(rows.map((row) => row.id));

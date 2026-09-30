@@ -10,6 +10,5 @@ export function compareRank(a, b) {
 
 export function relationTo(viewer, other) {
   if (viewer.id === other.id) return Relation.SELF;
-  if (other.isDummy) return Relation.ABOVE;
   return compareRank(other, viewer) < 0 ? Relation.ABOVE : Relation.BELOW;
 }
