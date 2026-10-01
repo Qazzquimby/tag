@@ -11,7 +11,17 @@ export const NetEvent = Object.freeze({
   FOOD_SPAWN: "food-spawn",
   FOOD_EATEN: "food-eaten",
   FOOD_SYNC: "food-sync",
+  ABILITY: "ability",
 });
+
+/**
+ * @typedef {Object} AbilityEvent
+ * @property {string} id
+ * @property {number} classId
+ * @property {"primary"|"secondary"} slot
+ * @property {number} x
+ * @property {number} y
+ */
 
 /**
  * @typedef {Object} Player

@@ -30,7 +30,7 @@
  * @property {number} cooldown
  * @property {(ctx: ClassContext) => void} use
  * @property {string} [label]
- * @property {string} [sound]
+ * @property {string} [sound] URL of an mp3 asset
  */
 
 /**

@@ -16,7 +16,7 @@ import {
 } from "./game.js";
 import { createInput } from "./input.js";
 import { createMap } from "./map.js";
-import { createAbilitySfx } from "./audio.js";
+import { createAbilityUseDetector, createSfx } from "./audio.js";
 import {
   createAbilityHud,
   createClassPicker,
@@ -78,7 +78,22 @@ const input = createInput(canvas, world, {
 
 const updateClassPicker = createClassPicker(classPickerEl, chooseClass);
 const updateAbilityHud = createAbilityHud(abilityHudEl);
-const updateAbilitySfx = createAbilitySfx();
+const detectAbilityUse = createAbilityUseDetector();
+const sfx = createSfx();
+
+function announceAbilityUse(player) {
+  for (const slot of detectAbilityUse(player)) {
+    const event = {
+      id: playerId,
+      classId: player.classId,
+      slot,
+      x: player.x,
+      y: player.y,
+    };
+    sfx.playAbility(event, player);
+    send(NetEvent.ABILITY, event);
+  }
+}
 
 function updateStatus() {
   if (errorText) {
@@ -115,6 +130,10 @@ async function enterRoom(code) {
       [NetEvent.FOOD_SPAWN]: (payload) => handleFoodSpawn(game, payload),
       [NetEvent.FOOD_EATEN]: (payload) => handleFoodEaten(game, payload),
       [NetEvent.FOOD_SYNC]: (payload) => handleFoodSync(game, payload),
+      [NetEvent.ABILITY]: (payload) => {
+        if (payload.id === playerId) return;
+        sfx.playAbility(payload, game.players.get(game.localId));
+      },
     },
     () => {
       copyBtn.hidden = false;
@@ -138,7 +157,7 @@ function frame(now) {
 
   const me = game ? game.players.get(game.localId) : null;
   updateAbilityHud(me);
-  updateAbilitySfx(me);
+  announceAbilityUse(me);
   const choosing = me?.status === Status.CHOOSING;
   const selectedClass = choosing ? null : me?.classId;
   updateClassPicker(Boolean(me && me.status !== Status.ALIVE), selectedClass);

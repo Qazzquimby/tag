@@ -1,13 +1,12 @@
 import { Shape } from "../config.js";
 import { lastFreePointAlong } from "../collision.js";
-
-const BLINK_SOUND = "tracer-blink";
-const REWIND_SOUND = "tracer-rewind";
+import blinkSound from "../assets/sfx/tracer/blink.mp3";
+import recallSound from "../assets/sfx/tracer/recall.mp3";
 
 const BLINK_DISTANCE = 150;
-const BLINK_COOLDOWN = 1;
-const REWIND_S = 2;
-const REWIND_COOLDOWN = 5;
+const BLINK_COOLDOWN = 3;
+const RECALL_S = 2;
+const RECALL_COOLDOWN = 8;
 
 export default Object.freeze({
   name: "Tracer",
@@ -26,14 +25,14 @@ export default Object.freeze({
     state.history.push({ t: state.elapsed, x: self.x, y: self.y });
     while (
       state.history.length > 1 &&
-      state.history[1].t <= state.elapsed - REWIND_S
+      state.history[1].t <= state.elapsed - RECALL_S
     ) {
       state.history.shift();
     }
   },
   primary: {
     label: "Blink",
-    sound: BLINK_SOUND,
+    sound: blinkSound,
     cooldown: BLINK_COOLDOWN,
     use({ self, controls, game }) {
       const dx = controls.aim.x - self.x;
@@ -53,9 +52,9 @@ export default Object.freeze({
     },
   },
   secondary: {
-    label: "Rewind",
-    sound: REWIND_SOUND,
-    cooldown: REWIND_COOLDOWN,
+    label: "RECALL",
+    sound: recallSound,
+    cooldown: RECALL_COOLDOWN,
     use({ self }) {
       const state = self.classState;
       const destination = state.history[0];
@@ -68,4 +67,5 @@ export default Object.freeze({
 });
 
 
-// Todo show recall location as an object. Get vision from recall location. Show both cooldowns visibly somewhere. Should have 3 charges of blink, and regain a charge over 5s. Recall cd 12. play sfx mp3 on ability use.
+// Todo show recall location as an object. Get vision from recall location.
+//  Recall cd 12.

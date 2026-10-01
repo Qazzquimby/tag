@@ -1,52 +1,83 @@
 import { AbilitySlot } from "./config.js";
 import { CLASS_DEFS } from "./classes/index.js";
 
-const SOUND_TONES = new Map([
-  ["tracer-blink", { frequency: 880, duration: 0.12 }],
-  ["tracer-rewind", { frequency: 440, duration: 0.2 }],
-]);
+const SLOTS = Object.values(AbilitySlot);
 
-export function createAbilitySfx() {
-  const sounds = new Map();
-  let audioContext = null;
+export function createAbilityUseDetector() {
   let previous = { [AbilitySlot.PRIMARY]: 0, [AbilitySlot.SECONDARY]: 0 };
   let previousClassId = null;
 
-  function play(sound) {
-    if (!audioContext) audioContext = new AudioContext();
-
-    const tone = sounds.get(sound);
-    if (!tone) return;
-
-    audioContext.resume();
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    const now = audioContext.currentTime;
-
-    oscillator.frequency.value = tone.frequency;
-    gain.gain.setValueAtTime(0.12, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + tone.duration);
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-    oscillator.start(now);
-    oscillator.stop(now + tone.duration);
-  }
-
-  for (const [sound, tone] of SOUND_TONES) sounds.set(sound, tone);
-
-  return function updateAbilitySfx(player) {
+  return function detectAbilityUse(player) {
     if (!player || player.classId !== previousClassId) {
       previousClassId = player?.classId ?? null;
-      previous = { [AbilitySlot.PRIMARY]: 0, [AbilitySlot.SECONDARY]: 0 };
-      return;
+      previous = Object.fromEntries(
+        SLOTS.map((slot) => [slot, player?.cooldowns[slot] ?? 0]),
+      );
+      return [];
     }
 
+    const used = [];
     const definition = CLASS_DEFS[player.classId];
-    for (const slot of Object.values(AbilitySlot)) {
-      const ability = definition[slot];
+
+    for (const slot of SLOTS) {
       const cooldown = player.cooldowns[slot];
-      if (ability?.sound && cooldown > previous[slot]) play(ability.sound);
+      if (definition[slot] && cooldown > previous[slot]) used.push(slot);
       previous[slot] = cooldown;
     }
+
+    return used;
   };
+}
+
+function spatialMix(origin, listener) {
+  return { volume: 1, pan: 0 };
+}
+
+export function createSfx() {
+  let audioContext = null;
+  const buffers = new Map();
+
+  function getAudioContext() {
+    if (!audioContext) audioContext = new AudioContext();
+    return audioContext;
+  }
+
+  function loadBuffer(url) {
+    if (!buffers.has(url)) {
+      const context = getAudioContext();
+      buffers.set(
+        url,
+        fetch(url)
+          .then((response) => response.arrayBuffer())
+          .then((data) => context.decodeAudioData(data)),
+      );
+    }
+
+    return buffers.get(url);
+  }
+
+  async function playAbility(event, listener) {
+    const ability = CLASS_DEFS[event.classId][event.slot];
+    if (!ability?.sound) return;
+
+    const context = getAudioContext();
+    const buffer = await loadBuffer(ability.sound);
+    await context.resume();
+
+    const { volume, pan } = spatialMix(event, listener);
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    const panner = context.createStereoPanner();
+
+    source.buffer = buffer;
+    gain.gain.value = volume;
+    panner.pan.value = pan;
+
+    source.connect(gain);
+    gain.connect(panner);
+    panner.connect(context.destination);
+    source.start();
+  }
+
+  return { playAbility };
 }
