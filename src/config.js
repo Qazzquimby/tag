@@ -1,4 +1,5 @@
 export const Status = Object.freeze({ ALIVE: 0, DEAD: 1, SPAWNING: 2, CHOOSING: 3 });
+export const EntityKind = Object.freeze({ PLAYER: 0, FOOD: 1, RECALL_MARKER: 2 });
 export const Shape = Object.freeze({ CIRCLE: 0, SQUARE: 1, TRIANGLE: 2 });
 export const Relation = Object.freeze({ SELF: 0, ABOVE: 1, BELOW: 2 });
 export const AbilitySlot = Object.freeze({ PRIMARY: "primary", SECONDARY: "secondary" });
@@ -24,7 +25,31 @@ export const NetEvent = Object.freeze({
  */
 
 /**
+ * @typedef {Object} Entity
+ * @property {string} id
+ * @property {number} kind
+ * @property {number} x
+ * @property {number} y
+ * @property {number} vx
+ * @property {number} vy
+ * @property {number} radius
+ * @property {boolean} collides
+ * @property {boolean} solid
+ * @property {boolean} interactive
+ * @property {number} [friction]
+ * @property {string|null} [ownerId]
+ * @property {number} [warningLeft]
+ * @property {string} [name]
+ * @property {import("./classes/types.js").ClassDef} [appearance]
+ */
+
+/**
  * @typedef {Object} Player
+ * @property {number} kind
+ * @property {number} radius
+ * @property {boolean} collides
+ * @property {boolean} solid
+ * @property {boolean} interactive
  * @property {string} id
  * @property {string} name
  * @property {number} classId
@@ -45,15 +70,6 @@ export const NetEvent = Object.freeze({
  * @property {Object|null} classState
  * @property {{primary: number, secondary: number}} cooldowns
  */
-
-/**
- * @typedef {Object} Food
- * @property {string} id
- * @property {number} x
- * @property {number} y
- * @property {number} warningLeft
- */
-
 
 export const RELATION_COLORS = Object.freeze({
   [Relation.SELF]: "#5bc8ff",
@@ -81,6 +97,7 @@ export const ROUND_RESULT_S = 5;
 export const FOOD_INTERVAL_S = 3;
 export const FOOD_MAX = 8;
 export const FOOD_RADIUS = 7;
+export const ENTITY_FRICTION = 4;
 
 export const BOOST_S = 0;
 export const BOOST_MULT = 1.0;

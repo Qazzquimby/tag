@@ -4,6 +4,7 @@ import { randomFreePosition } from "./map.js";
 import {
   BOOST_MULT,
   DEAD_S,
+  EntityKind,
   SPAWN_CLEARANCE,
   SPAWN_SAMPLES,
   SPAWN_WARNING_S,
@@ -20,10 +21,17 @@ export function createPlayer({
   isDummy = false,
   status = Status.ALIVE,
 }) {
-  return {
+  const player = {
     id,
     name,
     classId,
+    kind: EntityKind.PLAYER,
+    radius: CLASS_DEFS[classId].radius,
+    collides: true,
+    solid: true,
+    get interactive() {
+      return this.status === Status.ALIVE;
+    },
     status,
     x,
     y,
@@ -41,6 +49,12 @@ export function createPlayer({
     classState: null,
     cooldowns: { primary: 0, secondary: 0 },
   };
+  return player;
+}
+
+export function setPlayerClass(player, classId) {
+  player.classId = classId;
+  player.radius = CLASS_DEFS[classId].radius;
 }
 
 export function respawn(player, players, world) {
@@ -100,7 +114,7 @@ function applyMovement(ctx) {
     self.vy = (self.vy / speed) * maxSpeed;
   }
 
-  moveWithCollision(self, def.radius, dt, game.world.map);
+  moveWithCollision(self, self.radius, dt, game.world.map);
 }
 
 function useAbility(player, ctx, def, slot, pressed) {
@@ -207,7 +221,7 @@ export function applyStatePayload(player, payload) {
     Math.hypot(payload.x - player.x, payload.y - player.y) > REMOTE_SNAP_DIST;
 
   player.name = payload.name;
-  player.classId = payload.classId;
+  setPlayerClass(player, payload.classId);
   player.status = payload.status;
   player.aim = payload.aim;
   player.score = payload.score;

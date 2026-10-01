@@ -1,5 +1,6 @@
-import { WALL_BOUNCE } from "./config.js";
+import { EntityKind, WALL_BOUNCE } from "./config.js";
 import { isAreaFree, isSolid } from "./map.js";
+import { bodies } from "./bodies.js";
 
 const EPSILON = 1e-6;
 
@@ -71,4 +72,45 @@ export function moveWithCollision(player, half, dt, map) {
   resolveX(player, half, map);
   player.y += player.vy * dt;
   resolveY(player, half, map);
+}
+
+function collidesWith(a, b) {
+  return !(a.kind === EntityKind.PLAYER && b.kind === EntityKind.PLAYER);
+}
+
+export function resolveBodyCollisions(game) {
+  const solidBodies = [...bodies(game)].filter((body) => body.solid && body.interactive);
+
+  for (let i = 0; i < solidBodies.length; i++) {
+    const a = solidBodies[i];
+    for (let j = i + 1; j < solidBodies.length; j++) {
+      const b = solidBodies[j];
+      if (!collidesWith(a, b)) continue;
+
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const distance = Math.hypot(dx, dy);
+      const reach = a.radius + b.radius;
+      if (distance >= reach) continue;
+
+      const nx = distance === 0 ? 1 : dx / distance;
+      const ny = distance === 0 ? 0 : dy / distance;
+      const overlap = reach - distance;
+      a.x -= nx * overlap / 2;
+      a.y -= ny * overlap / 2;
+      b.x += nx * overlap / 2;
+      b.y += ny * overlap / 2;
+
+      const relativeSpeed = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+      if (relativeSpeed < 0) {
+        const average = ((a.vx * nx + a.vy * ny) + (b.vx * nx + b.vy * ny)) / 2;
+        const aNormal = a.vx * nx + a.vy * ny;
+        const bNormal = b.vx * nx + b.vy * ny;
+        a.vx += (average - aNormal) * nx;
+        a.vy += (average - aNormal) * ny;
+        b.vx += (average - bNormal) * nx;
+        b.vy += (average - bNormal) * ny;
+      }
+    }
+  }
 }

@@ -1,4 +1,5 @@
 import { Shape } from "../config.js";
+import { createRecallMarker, recallMarkerId } from "../entities/recall-marker.js";
 import { lastFreePointAlong } from "../collision.js";
 import blinkSound from "../assets/sfx/tracer/blink.mp3";
 import recallSound from "../assets/sfx/tracer/recall.mp3";
@@ -8,7 +9,7 @@ const BLINK_COOLDOWN = 3;
 const RECALL_S = 2;
 const RECALL_COOLDOWN = 8;
 
-export default Object.freeze({
+const tracer = {
   name: "Tracer",
   shape: Shape.CIRCLE,
   symbol: "⏱️",
@@ -19,7 +20,7 @@ export default Object.freeze({
   createState() {
     return { elapsed: 0, history: [] };
   },
-  update({ self, dt }) {
+  update({ self, dt, game }) {
     const state = self.classState;
     state.elapsed += dt;
     state.history.push({ t: state.elapsed, x: self.x, y: self.y });
@@ -29,6 +30,14 @@ export default Object.freeze({
     ) {
       state.history.shift();
     }
+
+    let marker = game.entities.get(recallMarkerId(self.id));
+    if (!marker) {
+      marker = createRecallMarker(self, tracer);
+      game.entities.set(marker.id, marker);
+    }
+    marker.x = state.history[0].x;
+    marker.y = state.history[0].y;
   },
   primary: {
     label: "Blink",
@@ -64,8 +73,9 @@ export default Object.freeze({
       state.history = [{ t: state.elapsed, x: self.x, y: self.y }];
     },
   },
-});
+};
+export default Object.freeze(tracer);
 
 
-// Todo show recall location as an object. Get vision from recall location.
+// Todo show recall location as a moving point, like an entity that can't be interacted with by other sources (pushed, grappled). Get vision from recall location.
 //  Recall cd 12.

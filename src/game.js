@@ -1,26 +1,25 @@
 import {
-  BOOST_S,
+  EntityKind,
   FOOD_INTERVAL_S,
   FOOD_MAX,
   FOOD_RADIUS,
   NetEvent,
-  Relation,
   ROUND_RESULT_S,
   ROUND_S,
-  SCORE_FOOD,
-  SCORE_PLAYER,
   SEND_HZ,
   STALE_S,
   Status,
 } from "./config.js";
-import { CLASS_DEFS, PlayerClass } from "./classes/index.js";
-import { createFood, isEdible, randomFoodPosition, updateFoods } from "./food.js";
+import { PlayerClass } from "./classes/index.js";
+import { createFood, randomFoodPosition } from "./entities/food.js";
+import { touchEntities, updateEntities } from "./entities/index.js";
+import { resolveBodyCollisions } from "./collision.js";
 import {
-  addScore,
   applyStatePayload,
   createPlayer,
   kill,
   pickSpawn,
+  setPlayerClass,
   respawn,
   smoothRemote,
   startRound,
@@ -45,10 +44,10 @@ export function createGame(localId, world, name) {
     localId,
     world,
     players: new Map(),
-    foods: new Map(),
+    entities: new Map(),
     foodTimer: FOOD_INTERVAL_S,
     lastSent: 0,
-    nextFoodId: 1,
+    nextEntityId: 1,
     roundStartedAt: Date.now(),
     roundResult: null,
   };
@@ -72,7 +71,7 @@ export function selectClass(game, classId) {
   const me = game.players.get(game.localId);
   if (me.status === Status.ALIVE) return;
 
-  me.classId = classId;
+  setPlayerClass(me, classId);
   if (me.status === Status.CHOOSING) respawn(me, game.players, game.world);
 }
 
@@ -125,13 +124,14 @@ export function updateGame(game, input, dt, net) {
     if (now - player.lastSeen > STALE_S * 1000) game.players.delete(id);
   }
 
+  updateEntities(game, dt);
+  resolveBodyCollisions(game);
+
   for (const player of [me, dummy]) {
     if (!player || player.status !== Status.ALIVE) continue;
-    catchPlayers(game, player, net);
-    catchFood(game, player, net);
+    touchEntities(game, player, net);
   }
 
-  updateFoods(game.foods, dt);
   if (isHost(game)) spawnFood(game, dt, net);
 
   if (now - game.lastSent >= 1000 / SEND_HZ) {
@@ -140,38 +140,6 @@ export function updateGame(game, input, dt, net) {
   }
 }
 
-function catchPlayers(game, catcher, net) {
-  const myRadius = CLASS_DEFS[catcher.classId].radius;
-
-  for (const other of game.players.values()) {
-    if (other === catcher) continue;
-    if (other.status !== Status.ALIVE) continue;
-    if (relationTo(catcher, other) !== Relation.ABOVE) continue;
-
-    const reach = myRadius + CLASS_DEFS[other.classId].radius;
-    if (Math.hypot(other.x - catcher.x, other.y - catcher.y) > reach) continue;
-
-    addScore(catcher, SCORE_PLAYER);
-    catcher.boostLeft = BOOST_S;
-    kill(other);
-
-    if (!other.isDummy) net.send(NetEvent.CATCH, { victim: other.id });
-  }
-}
-
-function catchFood(game, catcher, net) {
-  const myRadius = CLASS_DEFS[catcher.classId].radius;
-
-  for (const [id, food] of game.foods) {
-    if (!isEdible(food)) continue;
-    if (Math.hypot(food.x - catcher.x, food.y - catcher.y) > myRadius + FOOD_RADIUS) continue;
-
-    game.foods.delete(id);
-    addScore(catcher, SCORE_FOOD);
-    catcher.boostLeft = BOOST_S;
-    net.send(NetEvent.FOOD_EATEN, { id });
-  }
-}
 
 function isHost(game) {
   let host = null;
@@ -186,11 +154,15 @@ function spawnFood(game, dt, net) {
   game.foodTimer -= dt;
   if (game.foodTimer > 0) return;
   game.foodTimer = FOOD_INTERVAL_S;
-  if (game.foods.size >= FOOD_MAX) return;
+  let foodCount = 0;
+  for (const entity of game.entities.values()) {
+    if (entity.kind === EntityKind.FOOD) foodCount++;
+  }
+  if (foodCount >= FOOD_MAX) return;
 
   const position = randomFoodPosition(game.world);
-  const id = `${game.localId}:${game.nextFoodId++}`;
-  game.foods.set(id, createFood(id, position.x, position.y));
+  const id = `${game.localId}:${game.nextEntityId++}`;
+  game.entities.set(id, createFood(id, position.x, position.y));
   net.send(NetEvent.FOOD_SPAWN, { id, x: position.x, y: position.y });
 }
 
@@ -230,6 +202,7 @@ export function handleState(game, payload) {
     game.players.set(payload.id, player);
   }
 
+  setPlayerClass(player, payload.classId);
   applyStatePayload(player, payload);
 }
 
@@ -247,18 +220,18 @@ export function handleBye(game, payload) {
 
 export function handleFoodSpawn(game, payload) {
   if (game.foods.has(payload.id)) return;
-  game.foods.set(payload.id, createFood(payload.id, payload.x, payload.y));
+  game.entities.set(payload.id, createFood(payload.id, payload.x, payload.y));
 }
 
 export function handleFoodEaten(game, payload) {
-  game.foods.delete(payload.id);
+  game.entities.delete(payload.id);
 }
 
 export function handleFoodSync(game, payload) {
   game.roundStartedAt = payload.roundStartedAt;
   for (const food of payload.foods) {
-    if (game.foods.has(food.id)) continue;
-    game.foods.set(food.id, createFood(food.id, food.x, food.y, 0));
+    if (game.entities.has(food.id)) continue;
+    game.entities.set(food.id, createFood(food.id, food.x, food.y, 0));
   }
 }
 
@@ -268,6 +241,8 @@ export function handleHello(game, net) {
 
   net.send(NetEvent.FOOD_SYNC, {
     roundStartedAt: game.roundStartedAt,
-    foods: [...game.foods.values()].map((food) => ({ id: food.id, x: food.x, y: food.y })),
+    foods: [...game.entities.values()]
+      .filter((entity) => entity.kind === EntityKind.FOOD)
+      .map((food) => ({ id: food.id, x: food.x, y: food.y })),
   });
 }
