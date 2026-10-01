@@ -38,6 +38,21 @@ export function hasLineOfSight(map, from, to) {
   return castRay(map, from.x, from.y, dx / distance, dy / distance, distance) >= distance;
 }
 
+export function visionOrigins(game, viewer) {
+  return [
+    viewer,
+    ...[...game.entities.values()].filter(
+      (entity) => entity.ownerId === viewer.id && entity.grantsVision,
+    ),
+  ];
+}
+
+export function canSee(game, viewer, target) {
+  return visionOrigins(game, viewer).some((origin) =>
+    hasLineOfSight(game.world.map, origin, target),
+  );
+}
+
 export function visibilityPolygon(map, origin, rayCount = VISION_RAYS) {
   const maxDist = Math.hypot(map.cols * map.cell, map.rows * map.cell);
   const points = [];

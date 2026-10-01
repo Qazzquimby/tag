@@ -12,6 +12,7 @@ export function createEntity(fields) {
     collides: true,
     solid: false,
     interactive: true,
+    grantsVision: false,
     ownerId: null,
     ...fields,
   };

@@ -4,12 +4,46 @@ import { bodies } from "../bodies.js";
 import { FOOD_DEF } from "./food.js";
 import { PLAYER_DEF } from "./player-entity.js";
 import { RECALL_MARKER_DEF } from "./recall-marker.js";
+import { CLONE_DEF } from "./clone.js";
 
 export const ENTITY_DEFS = Object.freeze({
   [EntityKind.PLAYER]: PLAYER_DEF,
   [EntityKind.FOOD]: FOOD_DEF,
   [EntityKind.RECALL_MARKER]: RECALL_MARKER_DEF,
+  [EntityKind.CLONE]: CLONE_DEF,
 });
+
+export function replicatedStates(game, ownerId) {
+  return [...game.entities.values()]
+    .filter((entity) => entity.ownerId === ownerId && ENTITY_DEFS[entity.kind].replicated)
+    .map(({ id, kind, x, y, vx, vy }) => ({ id, kind, x, y, vx, vy }));
+}
+
+export function syncReplicatedEntities(game, owner, states = []) {
+  const stateIds = new Set(states.map((state) => state.id));
+
+  for (const state of states) {
+    let entity = game.entities.get(state.id);
+    if (!entity) {
+      entity = ENTITY_DEFS[state.kind].create(owner);
+      game.entities.set(state.id, entity);
+    }
+    entity.x = state.x;
+    entity.y = state.y;
+    entity.vx = state.vx;
+    entity.vy = state.vy;
+  }
+
+  for (const [id, entity] of game.entities) {
+    if (
+      entity.ownerId === owner.id &&
+      ENTITY_DEFS[entity.kind].replicated &&
+      !stateIds.has(id)
+    ) {
+      game.entities.delete(id);
+    }
+  }
+}
 
 export function updateEntities(game, dt) {
   for (const [id, entity] of game.entities) {

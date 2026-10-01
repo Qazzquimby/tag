@@ -1,8 +1,11 @@
 import { MAP_CELL, Status } from "./config.js";
 import { isSolid } from "./map.js";
-import { hasLineOfSight, visibilityPolygon } from "./vision.js";
+import { canSee, visionOrigins, visibilityPolygon } from "./vision.js";
 import { bodies } from "./bodies.js";
 import { ENTITY_DEFS } from "./entities/index.js";
+import { CLASS_DEFS } from "./classes/index.js";
+
+let visionCanvas;
 
 export function draw(ctx, world, game, now) {
   const me = game.players.get(game.localId);
@@ -14,11 +17,11 @@ export function draw(ctx, world, game, now) {
     const def = ENTITY_DEFS[body.kind];
     const visible = def.isVisible
       ? def.isVisible(body, me, game)
-      : hasLineOfSight(world.map, me, body);
-    if (visible) def.draw(ctx, body, me, now);
+      : canSee(game, me, body);
+    if (visible) def.draw(ctx, body, me, now, game);
   }
 
-  drawVisionShade(ctx, world, me);
+  drawVisionShade(ctx, world, me, game);
   drawOverlay(ctx, world, game);
 }
 
@@ -49,17 +52,33 @@ function drawWalls(ctx, world) {
   }
 }
 
-function drawVisionShade(ctx, world, origin) {
-  const points = visibilityPolygon(world.map, origin);
-  ctx.beginPath();
-  ctx.rect(0, 0, world.W, world.H);
-  if (points.length > 0) {
-    ctx.moveTo(points[0].x, points[0].y);
-    for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
-    ctx.closePath();
+function drawVisionShade(ctx, world, origin, game) {
+  if (!visionCanvas) visionCanvas = document.createElement("canvas");
+  if (visionCanvas.width !== world.W || visionCanvas.height !== world.H) {
+    visionCanvas.width = world.W;
+    visionCanvas.height = world.H;
   }
-  ctx.fillStyle = "rgba(0, 0, 0, 0.58)";
-  ctx.fill("evenodd");
+
+  const shade = visionCanvas.getContext("2d");
+  shade.globalCompositeOperation = "source-over";
+  shade.globalAlpha = 1;
+  shade.fillStyle = "rgba(0, 0, 0, 0.58)";
+  shade.fillRect(0, 0, world.W, world.H);
+  shade.globalCompositeOperation = "destination-out";
+  shade.fillStyle = "#fff";
+
+  for (const visionOrigin of visionOrigins(game, origin)) {
+    const points = visibilityPolygon(world.map, visionOrigin);
+    if (points.length === 0) continue;
+    shade.beginPath();
+    shade.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) shade.lineTo(points[i].x, points[i].y);
+    shade.closePath();
+    shade.fill();
+  }
+
+  shade.globalCompositeOperation = "source-over";
+  ctx.drawImage(visionCanvas, 0, 0);
 }
 
 

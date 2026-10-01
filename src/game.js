@@ -12,7 +12,12 @@ import {
 } from "./config.js";
 import { PlayerClass } from "./classes/index.js";
 import { createFood, randomFoodPosition } from "./entities/food.js";
-import { touchEntities, updateEntities } from "./entities/index.js";
+import {
+  replicatedStates,
+  syncReplicatedEntities,
+  touchEntities,
+  updateEntities,
+} from "./entities/index.js";
 import { resolveBodyCollisions } from "./collision.js";
 import {
   applyStatePayload,
@@ -78,7 +83,10 @@ export function selectClass(game, classId) {
 function sendState(game, net) {
   const me = game.players.get(game.localId);
   if (me.status === Status.CHOOSING) return;
-  net.send(NetEvent.STATE, toStatePayload(me));
+  net.send(NetEvent.STATE, {
+    ...toStatePayload(me),
+    entities: replicatedStates(game, me.id),
+  });
 }
 
 export function roundSecondsLeft(game) {
@@ -204,6 +212,7 @@ export function handleState(game, payload) {
 
   setPlayerClass(player, payload.classId);
   applyStatePayload(player, payload);
+  syncReplicatedEntities(game, player, payload.entities);
 }
 
 export function handleCatch(game, payload) {
@@ -219,7 +228,7 @@ export function handleBye(game, payload) {
 }
 
 export function handleFoodSpawn(game, payload) {
-  if (game.foods.has(payload.id)) return;
+  if (game.entities.has(payload.id)) return;
   game.entities.set(payload.id, createFood(payload.id, payload.x, payload.y));
 }
 

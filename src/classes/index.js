@@ -2,12 +2,14 @@ import balanced from "./balanced.js";
 import scout from "./scout.js";
 import tank from "./tank.js";
 import tracer from "./tracer.js";
+import clone from "./clone.js";
 
 export const PlayerClass = Object.freeze({
   BALANCED: 0,
   SCOUT: 1,
   TANK: 2,
   TRACER: 3,
+  CLONE: 4,
 });
 
 export const CLASS_DEFS = Object.freeze({
@@ -15,4 +17,5 @@ export const CLASS_DEFS = Object.freeze({
   [PlayerClass.SCOUT]: scout,
   [PlayerClass.TANK]: tank,
   [PlayerClass.TRACER]: tracer,
+  [PlayerClass.CLONE]: clone,
 });

@@ -75,7 +75,3 @@ const tracer = {
   },
 };
 export default Object.freeze(tracer);
-
-
-// Todo show recall location as a moving point, like an entity that can't be interacted with by other sources (pushed, grappled). Get vision from recall location.
-//  Recall cd 12.

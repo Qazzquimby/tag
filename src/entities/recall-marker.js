@@ -1,4 +1,6 @@
-import { EntityKind, RELATION_COLORS, Relation } from "../config.js";
+import { EntityKind, RELATION_COLORS } from "../config.js";
+import { CLASS_DEFS } from "../classes/index.js";
+import { relationTo } from "../ranking.js";
 import { drawShape, drawSymbol, drawLabel } from "../render-shapes.js";
 import { createEntity } from "./entity.js";
 
@@ -16,6 +18,7 @@ export function createRecallMarker(owner, appearance) {
     interactive: false,
     collides: false,
     solid: false,
+    grantsVision: true,
     ownerId: owner.id,
     name: owner.name,
     appearance,
@@ -24,16 +27,18 @@ export function createRecallMarker(owner, appearance) {
 
 export const RECALL_MARKER_DEF = Object.freeze({
   despawnWithOwner: true,
-  isVisible(entity, viewer) {
-    return entity.ownerId === viewer.id;
+  replicated: true,
+  create(owner) {
+    return createRecallMarker(owner, CLASS_DEFS[owner.classId]);
   },
-  draw(ctx, entity) {
+  draw(ctx, entity, viewer, now, game) {
+    const owner = game.players.get(entity.ownerId);
     ctx.globalAlpha = 0.4;
     drawShape(
       ctx,
       entity,
       entity.appearance,
-      RELATION_COLORS[Relation.SELF],
+      RELATION_COLORS[relationTo(viewer, owner)],
       false,
     );
     drawSymbol(ctx, entity, entity.appearance);
@@ -41,3 +46,5 @@ export const RECALL_MARKER_DEF = Object.freeze({
     ctx.globalAlpha = 1;
   },
 });
+
+// todo, renders as series of small teleports instead of smooth movement

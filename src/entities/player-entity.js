@@ -11,7 +11,7 @@ import {
 import { CLASS_DEFS } from "../classes/index.js";
 import { addScore, kill } from "../player.js";
 import { relationTo } from "../ranking.js";
-import { hasLineOfSight } from "../vision.js";
+import { canSee } from "../vision.js";
 import { drawShape, drawSymbol, drawLabel } from "../render-shapes.js";
 
 function drawAimArrow(ctx, player, def, color) {
@@ -44,7 +44,7 @@ function drawSpawnWarning(ctx, player, def, color, now) {
 export const PLAYER_DEF = Object.freeze({
   isVisible(player, viewer, game) {
     if (player.status === Status.CHOOSING) return false;
-    return player.id === viewer.id || hasLineOfSight(game.world.map, viewer, player);
+    return player.id === viewer.id || canSee(game, viewer, player);
   },
   draw(ctx, player, viewer, now) {
     if (player.status === Status.DEAD) return;
