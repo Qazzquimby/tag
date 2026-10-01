@@ -11,9 +11,9 @@ export default Object.freeze({
   shape: Shape.CIRCLE,
   symbol: "⏱️",
   radius: 12,
-  accel: 1600,
-  maxSpeed: 340,
-  friction: 4,
+  accel: 9999999,
+  maxSpeed: 220,
+  friction: 8,
   createState() {
     return { elapsed: 0, history: [] };
   },
