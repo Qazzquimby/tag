@@ -14,10 +14,10 @@ export default Object.freeze({
   symbol: "👥",
   radius: 13,
   accel: 1400,
-  maxSpeed: 250,
-  friction: 6,
+  maxSpeed: 230,
+  friction: 5,
   primary: {
-    cooldown: 3,
+    cooldown: 5,
     label: "Clone",
     use({ self, game }) {
       const clone = createClone(self);
