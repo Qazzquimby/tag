@@ -1,6 +1,7 @@
 export const Status = Object.freeze({ ALIVE: 0, DEAD: 1, SPAWNING: 2, CHOOSING: 3 });
 export const Shape = Object.freeze({ CIRCLE: 0, SQUARE: 1, TRIANGLE: 2 });
 export const Relation = Object.freeze({ SELF: 0, ABOVE: 1, BELOW: 2 });
+export const AbilitySlot = Object.freeze({ PRIMARY: "primary", SECONDARY: "secondary" });
 
 export const NetEvent = Object.freeze({
   HELLO: "hello",

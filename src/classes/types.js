@@ -29,6 +29,8 @@
  * @typedef {Object} Ability
  * @property {number} cooldown
  * @property {(ctx: ClassContext) => void} use
+ * @property {string} [label]
+ * @property {string} [sound]
  */
 
 /**

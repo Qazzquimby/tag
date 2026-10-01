@@ -1,6 +1,9 @@
 import { Shape } from "../config.js";
 import { lastFreePointAlong } from "../collision.js";
 
+const BLINK_SOUND = "tracer-blink";
+const REWIND_SOUND = "tracer-rewind";
+
 const BLINK_DISTANCE = 150;
 const BLINK_COOLDOWN = 1;
 const REWIND_S = 2;
@@ -29,6 +32,8 @@ export default Object.freeze({
     }
   },
   primary: {
+    label: "Blink",
+    sound: BLINK_SOUND,
     cooldown: BLINK_COOLDOWN,
     use({ self, controls, game }) {
       const dx = controls.aim.x - self.x;
@@ -48,6 +53,8 @@ export default Object.freeze({
     },
   },
   secondary: {
+    label: "Rewind",
+    sound: REWIND_SOUND,
     cooldown: REWIND_COOLDOWN,
     use({ self }) {
       const state = self.classState;

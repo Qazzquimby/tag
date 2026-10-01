@@ -16,7 +16,9 @@ import {
 } from "./game.js";
 import { createInput } from "./input.js";
 import { createMap } from "./map.js";
+import { createAbilitySfx } from "./audio.js";
 import {
+  createAbilityHud,
   createClassPicker,
   renderRoundResult,
   renderRoundTimer,
@@ -38,6 +40,7 @@ const scoreboardEl = document.querySelector("#scoreboard");
 const classPickerEl = document.querySelector("#class-picker");
 const roundTimerEl = document.querySelector("#round-timer");
 const roundBannerEl = document.querySelector("#round-banner");
+const abilityHudEl = document.querySelector("#ability-hud");
 
 const world = {
   W: canvas.width,
@@ -74,6 +77,8 @@ const input = createInput(canvas, world, {
 });
 
 const updateClassPicker = createClassPicker(classPickerEl, chooseClass);
+const updateAbilityHud = createAbilityHud(abilityHudEl);
+const updateAbilitySfx = createAbilitySfx();
 
 function updateStatus() {
   if (errorText) {
@@ -132,6 +137,8 @@ function frame(now) {
   }
 
   const me = game ? game.players.get(game.localId) : null;
+  updateAbilityHud(me);
+  updateAbilitySfx(me);
   const choosing = me?.status === Status.CHOOSING;
   const selectedClass = choosing ? null : me?.classId;
   updateClassPicker(Boolean(me && me.status !== Status.ALIVE), selectedClass);

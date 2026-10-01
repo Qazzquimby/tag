@@ -1,4 +1,4 @@
-import { RELATION_COLORS } from "./config.js";
+import { AbilitySlot, RELATION_COLORS, Status } from "./config.js";
 import { CLASS_DEFS } from "./classes/index.js";
 
 function deltaArrow(delta) {
@@ -42,6 +42,58 @@ export function renderRoundResult(element, result, now) {
     ? `${result.winnerName} wins with ${result.winnerScore}`
     : "Round over – no winner";
   element.hidden = false;
+}
+
+function buildAbilitySlots(container, classId) {
+  const slots = [];
+
+  for (const slot of Object.values(AbilitySlot)) {
+    const ability = CLASS_DEFS[classId][slot];
+    if (!ability) continue;
+
+    const slotEl = document.createElement("div");
+    slotEl.className = "ability-slot";
+
+    const fillEl = document.createElement("div");
+    fillEl.className = "ability-fill";
+
+    const textEl = document.createElement("span");
+    textEl.className = "ability-text";
+
+    slotEl.append(fillEl, textEl);
+    container.append(slotEl);
+    slots.push({ slot, ability, fillEl, textEl, slotEl });
+  }
+
+  return slots;
+}
+
+export function createAbilityHud(container) {
+  let classId = null;
+  let slots = [];
+
+  return function updateAbilityHud(player) {
+    if (!player || player.status !== Status.ALIVE) {
+      container.hidden = true;
+      return;
+    }
+
+    container.hidden = false;
+    if (player.classId !== classId) {
+      classId = player.classId;
+      slots = buildAbilitySlots(container, classId);
+    }
+
+    for (const { slot, ability, fillEl, textEl, slotEl } of slots) {
+      const remaining = player.cooldowns[slot];
+      const fill = Math.max(0, Math.min(100, (remaining / ability.cooldown) * 100));
+      fillEl.style.width = `${fill}%`;
+      textEl.textContent = remaining > 0
+        ? `${ability.label || ""} ${remaining.toFixed(1)}`.trim()
+        : ability.label || "";
+      slotEl.classList.toggle("ready", remaining <= 0);
+    }
+  };
 }
 
 export function createClassPicker(container, onSelect) {
