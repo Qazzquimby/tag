@@ -1,13 +1,13 @@
 import { moveWithCollision } from "./collision.js";
+import { CLASS_DEFS, PlayerClass } from "./classes/index.js";
 import { randomFreePosition } from "./map.js";
 import {
   BOOST_MULT,
-  CLASS_DEFS,
   DEAD_S,
-  PlayerClass,
   SPAWN_CLEARANCE,
   SPAWN_SAMPLES,
   SPAWN_WARNING_S,
+  REMOTE_SNAP_DIST,
   Status,
 } from "./config.js";
 
@@ -38,6 +38,8 @@ export function createPlayer({
     stateTimer: 0,
     lastSeen: performance.now(),
     isDummy,
+    classState: null,
+    cooldowns: { primary: 0, secondary: 0 },
   };
 }
 
@@ -57,44 +59,64 @@ function updateDead(player, dt, players, world) {
   respawn(player, players, world);
 }
 
+function resetAbilities(player) {
+  const def = CLASS_DEFS[player.classId];
+  player.cooldowns = { primary: 0, secondary: 0 };
+  player.classState = def.createState ? def.createState() : null;
+}
+
 function updateSpawning(player, dt) {
   player.stateTimer -= dt;
-  if (player.stateTimer <= 0) player.status = Status.ALIVE;
+  if (player.stateTimer <= 0) {
+    player.status = Status.ALIVE;
+    resetAbilities(player);
+  }
 }
 
-function applyMovement(player, controls, dt, world) {
-  const def = CLASS_DEFS[player.classId];
-  const boost = player.boostLeft > 0 ? BOOST_MULT : 1;
-  player.aim = Math.atan2(controls.aim.y - player.y, controls.aim.x - player.x);
+function applyMovement(ctx) {
+  const { self, controls, dt, game } = ctx;
+  const def = CLASS_DEFS[self.classId];
+  const boost = self.boostLeft > 0 ? BOOST_MULT : 1;
+  const intent = {
+    moveX: controls.move.x,
+    moveY: controls.move.y,
+    accel: def.accel,
+    friction: def.friction,
+    maxSpeed: def.maxSpeed,
+  };
+  def.adjustIntent?.(ctx, intent);
 
-  const thrusting = controls.primary && def.primaryAccel > 0;
-  const accel = thrusting ? def.primaryAccel : def.accel;
-  const friction = thrusting ? 0 : def.friction;
-  const moveX = thrusting ? Math.cos(player.aim) : controls.move.x;
-  const moveY = thrusting ? Math.sin(player.aim) : controls.move.y;
+  self.vx += intent.moveX * intent.accel * boost * dt;
+  self.vy += intent.moveY * intent.accel * boost * dt;
 
-  player.vx += moveX * accel * boost * dt;
-  player.vy += moveY * accel * boost * dt;
+  const damp = Math.exp(-intent.friction * dt);
+  self.vx *= damp;
+  self.vy *= damp;
 
-  const damp = Math.exp(-friction * dt);
-  player.vx *= damp;
-  player.vy *= damp;
-
-  const maxSpeed = def.maxSpeed * boost;
-  const speed = Math.hypot(player.vx, player.vy);
+  const maxSpeed = intent.maxSpeed * boost;
+  const speed = Math.hypot(self.vx, self.vy);
   if (speed > maxSpeed) {
-    player.vx = (player.vx / speed) * maxSpeed;
-    player.vy = (player.vy / speed) * maxSpeed;
+    self.vx = (self.vx / speed) * maxSpeed;
+    self.vy = (self.vy / speed) * maxSpeed;
   }
 
-  moveWithCollision(player, def.radius, dt, world.map);
+  moveWithCollision(self, def.radius, dt, game.world.map);
 }
 
-export function updateOwned(player, controls, dt, players, world) {
+function useAbility(player, ctx, def, slot, pressed) {
+  const ability = def[slot];
+  if (!pressed || !ability || player.cooldowns[slot] > 0) return;
+  ability.use(ctx);
+  player.cooldowns[slot] = ability.cooldown;
+}
+
+export function updateOwned(player, controls, dt, game) {
   if (player.boostLeft > 0) player.boostLeft = Math.max(0, player.boostLeft - dt);
+  player.cooldowns.primary = Math.max(0, player.cooldowns.primary - dt);
+  player.cooldowns.secondary = Math.max(0, player.cooldowns.secondary - dt);
 
   if (player.status === Status.DEAD) {
-    updateDead(player, dt, players, world);
+    updateDead(player, dt, game.players, game.world);
     return;
   }
 
@@ -103,7 +125,13 @@ export function updateOwned(player, controls, dt, players, world) {
     return;
   }
 
-  applyMovement(player, controls, dt, world);
+  player.aim = Math.atan2(controls.aim.y - player.y, controls.aim.x - player.x);
+  const ctx = { self: player, controls, dt, game };
+  const def = CLASS_DEFS[player.classId];
+  def.update?.(ctx);
+  useAbility(player, ctx, def, "primary", controls.primaryPressed);
+  useAbility(player, ctx, def, "secondary", controls.secondaryPressed);
+  applyMovement(ctx);
 }
 
 export function kill(player) {
@@ -175,6 +203,8 @@ export function toStatePayload(player) {
 
 export function applyStatePayload(player, payload) {
   const wasAlive = player.status === Status.ALIVE;
+  const shouldSnap =
+    Math.hypot(payload.x - player.x, payload.y - player.y) > REMOTE_SNAP_DIST;
 
   player.name = payload.name;
   player.classId = payload.classId;
@@ -186,7 +216,7 @@ export function applyStatePayload(player, payload) {
   player.ty = payload.y;
   player.lastSeen = performance.now();
 
-  if (!wasAlive || payload.status !== Status.ALIVE) {
+  if (!wasAlive || payload.status !== Status.ALIVE || shouldSnap) {
     player.x = payload.x;
     player.y = payload.y;
   }

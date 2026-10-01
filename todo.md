@@ -1,0 +1,101 @@
+"Entity" is a player or object.
+Tiles can be passed over and may apply an effect on things above it.
+Edges of the map can't be changed the way inner walls can.
+
+
+Classes:
+    
+# Monkey
+
+left click, throw banana peel toward cursor with strength proportional to distance to cursor with some maximum.
+Cooldown 4 seconds. Lasts 8 seconds before flashing and disappearing.
+Anyone who touches the banana peel, including you, loses control for 0.5s and is pulled in the direction of the banana peel, and the banana peel is destroyed.
+
+Right click, stop moving while holding right mouse button. On release or after 3s, launch in the direction of the mouse cursor with strength proportional to the charge time.
+Preferably has some kind of vfx and sfx. Should be able to steer left and right somewhat with mouse cursor, but direction is mostly fixed at launch time. Get more controllable toward the end of the blast. 
+Cooldown 8 seconds
+
+# Snake
+Only moves orthogonally at a fixed speed. No momentum conservation. Accelerates the longer it moves in a straight line.
+On eating a player or food, gain a body segment. Can't move through own body.
+Can catch prey with body, but can only be caught at head. Dies and loses 10pt if it can't move.
+
+Left click, gain speed for 1s. 6s cd.
+Right click, swap head and tail (change direction to move away from body)
+
+# Bomber
+
+left click drop a bomb adjacent to you in that direction (orthogonally). After 2 seconds it creates an orthogonal explosion (bomberman).
+On hitting anyone, including you, pushes them away from bomb source. Non-edge walls hit by the explosion
+Bomb collides with players and is pushed with them, and has its own momentum.
+Cooldown 4 seconds
+
+Right click knock nearby entities away. Pushes bombs much farther. 2s cd.
+
+# Demoman
+
+left click shoots a sticky bomb (physics same as banana peel). Cd 2s. Arms after 0.5s.
+right click detonates all armed sticky bombs, pushing entities away from them. Closer to center gives more knockback. Knockback stacks from multiple sticky bombs.
+
+# Prince
+
+Sticks to walls and moves faster along them. Automatically turns along concave turns (inside corners) but flies off for convex turns.
+
+Left click jumps away from the current wall, while preserving momentum.
+Right click rewinds location while held. Has a maximum charge of 1s. Regains the charge at 1s/3s.
+
+
+# Ghost
+Passively gets increasingly transparent to more distant players
+
+Left click
+For 3s appear to be predator to all players.
+Prey players in close range are 'feared', lose momentum, and move directly away from ghost for 2s.
+cooldown 8s
+
+Right click, while held move slower, become increasingly transparent, can see through and move through walls.
+Max charge of 5s, recharge at 2s/1s.
+
+
+# Skater
+low friction, can conserve momentum into smooth turns. (Monkey jetpack should work the same)
+
+Leaves fading trail of ice tiles behind her which reduce friction for other players.
+
+left click reverse momentum
+Right click spin momentum around mouse cursor as pivot point 
+
+# Tracer
+
+Left click teleport short distance towards mouse cursor 
+right click teleport to where you were 2s ago
+
+# Spider
+left click shoot strand forward and backward which stretches across entire map, ignoring walls.
+Max 3, replace oldest, cd 8
+
+Enemies touching strand are visible to you and slowed.
+right click while touching a strand quickly moves along the strand, even through walls.
+
+# Magnet
+
+left click reposition magnet to cursor location (moves over time, doesnt teleport)
+Right click toggles magnet from pulling you to pushing you
+
+# Frog
+Moves in small lunges
+left click charges tongue, curved projectile (similar to monkey jetpack). On hitting entity pulls them in. On hitting wall pulls frog to it while conserving momentum.
+
+Right click repositions a fly to the cursor position (moves over time, doesnt teleport). Frog has vision from the fly and can grapple to it with tongue.
+
+
+# Clone
+left click make a visually identical copy of you with your current momentum.
+Right click to switch locations with the clone
+
+
+# Engineer
+Press into wall to destroy it after a delay.
+Left click places a 1x3 wall (show preview). Wall segments are destroyed when someone touches it, after a delay.
+right click to push a nearby wall orthogonally away.
+

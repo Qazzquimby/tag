@@ -1,11 +1,9 @@
 import {
   BOOST_S,
-  CLASS_DEFS,
   FOOD_INTERVAL_S,
   FOOD_MAX,
   FOOD_RADIUS,
   NetEvent,
-  PlayerClass,
   Relation,
   ROUND_RESULT_S,
   ROUND_S,
@@ -15,6 +13,7 @@ import {
   STALE_S,
   Status,
 } from "./config.js";
+import { CLASS_DEFS, PlayerClass } from "./classes/index.js";
 import { createFood, isEdible, randomFoodPosition, updateFoods } from "./food.js";
 import {
   addScore,
@@ -36,6 +35,9 @@ const NO_CONTROLS = {
   move: { x: 0, y: 0 },
   aim: { x: 0, y: 0 },
   primary: false,
+  secondary: false,
+  primaryPressed: false,
+  secondaryPressed: false,
 };
 
 export function createGame(localId, world, name) {
@@ -110,10 +112,10 @@ function updateRound(game) {
 export function updateGame(game, input, dt, net) {
   const me = game.players.get(game.localId);
   const controls = input.getControls();
-  updateOwned(me, controls, dt, game.players, game.world);
+  updateOwned(me, controls, dt, game);
 
   const dummy = game.players.get(DUMMY_ID);
-  if (dummy) updateOwned(dummy, NO_CONTROLS, dt, game.players, game.world);
+  if (dummy) updateOwned(dummy, NO_CONTROLS, dt, game);
   updateRound(game);
 
   const now = performance.now();

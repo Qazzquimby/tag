@@ -1,4 +1,4 @@
-import { PlayerClass } from "./config.js";
+import { PlayerClass } from "./classes/index.js";
 
 const CLASS_ORDER = Object.values(PlayerClass);
 
@@ -6,7 +6,15 @@ export function createInput(canvas, world, actions) {
   const keys = new Set();
   const mouse = { x: world.W / 2, y: world.H / 2 };
   const move = { x: 0, y: 0 };
-  const controls = { move, aim: mouse, primary: false };
+  const pending = { primary: false, secondary: false };
+  const controls = {
+    move,
+    aim: mouse,
+    primary: false,
+    secondary: false,
+    primaryPressed: false,
+    secondaryPressed: false,
+  };
 
   function isTyping(event) {
     const target = event.target;
@@ -24,12 +32,21 @@ export function createInput(canvas, world, actions) {
 
   canvas.addEventListener("mousemove", updateMouse);
 
+  canvas.addEventListener("contextmenu", (event) => event.preventDefault());
+
   canvas.addEventListener("mousedown", (event) => {
-    if (event.button === 0) controls.primary = true;
+    if (event.button === 0) {
+      controls.primary = true;
+      pending.primary = true;
+    } else if (event.button === 2) {
+      controls.secondary = true;
+      pending.secondary = true;
+    }
   });
 
   window.addEventListener("mouseup", (event) => {
     if (event.button === 0) controls.primary = false;
+    if (event.button === 2) controls.secondary = false;
   });
 
   window.addEventListener("keydown", (event) => {
@@ -52,6 +69,9 @@ export function createInput(canvas, world, actions) {
   window.addEventListener("blur", () => {
     keys.clear();
     controls.primary = false;
+    controls.secondary = false;
+    pending.primary = false;
+    pending.secondary = false;
   });
 
   function getControls() {
@@ -68,6 +88,10 @@ export function createInput(canvas, world, actions) {
     }
     move.x = x;
     move.y = y;
+    controls.primaryPressed = pending.primary;
+    controls.secondaryPressed = pending.secondary;
+    pending.primary = false;
+    pending.secondary = false;
     return controls;
   }
 

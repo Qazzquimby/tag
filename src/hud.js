@@ -1,4 +1,5 @@
-import { CLASS_DEFS, RELATION_COLORS } from "./config.js";
+import { RELATION_COLORS } from "./config.js";
+import { CLASS_DEFS } from "./classes/index.js";
 
 function deltaArrow(delta) {
   if (delta > 0) return "▲";

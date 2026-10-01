@@ -1,5 +1,5 @@
 import { WALL_BOUNCE } from "./config.js";
-import { isSolid } from "./map.js";
+import { isAreaFree, isSolid } from "./map.js";
 
 const EPSILON = 1e-6;
 
@@ -46,6 +46,24 @@ function resolveY(player, half, map) {
     player.y = collisionFace;
     player.vy = -player.vy * WALL_BOUNCE;
   }
+}
+
+export function lastFreePointAlong(map, half, from, to) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const distance = Math.hypot(dx, dy);
+  const steps = Math.ceil(distance / 4);
+
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    const point = { x: from.x + dx * t, y: from.y + dy * t };
+    if (!isAreaFree(map, point.x, point.y, half)) {
+      const previousT = (i - 1) / steps;
+      return { x: from.x + dx * previousT, y: from.y + dy * previousT };
+    }
+  }
+
+  return { x: to.x, y: to.y };
 }
 
 export function moveWithCollision(player, half, dt, map) {

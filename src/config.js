@@ -1,5 +1,4 @@
 export const Status = Object.freeze({ ALIVE: 0, DEAD: 1, SPAWNING: 2, CHOOSING: 3 });
-export const PlayerClass = Object.freeze({ BALANCED: 0, SCOUT: 1, TANK: 2 });
 export const Shape = Object.freeze({ CIRCLE: 0, SQUARE: 1, TRIANGLE: 2 });
 export const Relation = Object.freeze({ SELF: 0, ABOVE: 1, BELOW: 2 });
 
@@ -32,6 +31,8 @@ export const NetEvent = Object.freeze({
  * @property {number} stateTimer
  * @property {number} lastSeen
  * @property {boolean} isDummy
+ * @property {Object|null} classState
+ * @property {{primary: number, secondary: number}} cooldowns
  */
 
 /**
@@ -42,38 +43,6 @@ export const NetEvent = Object.freeze({
  * @property {number} warningLeft
  */
 
-export const CLASS_DEFS = Object.freeze({
-  [PlayerClass.BALANCED]: Object.freeze({
-    name: "Balanced",
-    shape: Shape.CIRCLE,
-    symbol: "🙂",
-    radius: 13,
-    accel: 1400,
-    maxSpeed: 320,
-    friction: 4,
-    primaryAccel: 0,
-  }),
-  [PlayerClass.SCOUT]: Object.freeze({
-    name: "Scout",
-    shape: Shape.TRIANGLE,
-    symbol: "⚡",
-    radius: 11,
-    accel: 1800,
-    maxSpeed: 400,
-    friction: 2.5,
-    primaryAccel: 3200,
-  }),
-  [PlayerClass.TANK]: Object.freeze({
-    name: "Tank",
-    shape: Shape.SQUARE,
-    symbol: "🛡",
-    radius: 16,
-    accel: 900,
-    maxSpeed: 250,
-    friction: 6,
-    primaryAccel: 0,
-  }),
-});
 
 export const RELATION_COLORS = Object.freeze({
   [Relation.SELF]: "#5bc8ff",
@@ -84,6 +53,7 @@ export const RELATION_COLORS = Object.freeze({
 export const FOOD_COLOR = "#3ddc84";
 export const MAP_CELL = 50;
 export const WALL_BOUNCE = 0.5;
+export const REMOTE_SNAP_DIST = 100;
 export const VISION_RAYS = 720;
 export const SPAWN_CLEARANCE = 20;
 

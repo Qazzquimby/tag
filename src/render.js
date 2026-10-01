@@ -1,5 +1,4 @@
 import {
-  CLASS_DEFS,
   FOOD_COLOR,
   FOOD_RADIUS,
   MAP_CELL,
@@ -7,6 +6,7 @@ import {
   Shape,
   Status,
 } from "./config.js";
+import { CLASS_DEFS } from "./classes/index.js";
 import { isSolid } from "./map.js";
 import { relationTo } from "./ranking.js";
 import { hasLineOfSight, visibilityPolygon } from "./vision.js";
@@ -184,7 +184,11 @@ function drawOverlay(ctx, world, game) {
     ctx.font = "bold 20px system-ui";
     ctx.textAlign = "center";
     ctx.fillStyle = "#fff";
-    ctx.fillText("Choose a class (1-3)", world.W / 2, world.H / 2);
+    ctx.fillText(
+      `Choose a class (1-${Object.keys(CLASS_DEFS).length})`,
+      world.W / 2,
+      world.H / 2,
+    );
   } else if (me && me.status === Status.DEAD) {
     ctx.font = "bold 20px system-ui";
     ctx.textAlign = "center";
