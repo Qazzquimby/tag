@@ -56,15 +56,12 @@ export function createSfx() {
     return buffers.get(url);
   }
 
-  async function playAbility(event, listener) {
-    const ability = CLASS_DEFS[event.classId][event.slot];
-    if (!ability?.sound) return;
-
+  async function play(url, origin, listener) {
     const context = getAudioContext();
-    const buffer = await loadBuffer(ability.sound);
+    const buffer = await loadBuffer(url);
     await context.resume();
 
-    const { volume, pan } = spatialMix(event, listener);
+    const { volume, pan } = spatialMix(origin, listener);
     const source = context.createBufferSource();
     const gain = context.createGain();
     const panner = context.createStereoPanner();
@@ -79,5 +76,11 @@ export function createSfx() {
     source.start();
   }
 
-  return { playAbility };
+  async function playAbility(event, listener) {
+    const ability = CLASS_DEFS[event.classId][event.slot];
+    if (!ability?.sound) return;
+    await play(ability.sound, event, listener);
+  }
+
+  return { playAbility, play };
 }

@@ -2,7 +2,6 @@ import {
   EntityKind,
   FOOD_INTERVAL_S,
   FOOD_MAX,
-  FOOD_RADIUS,
   NetEvent,
   ROUND_RESULT_S,
   ROUND_S,
@@ -31,7 +30,8 @@ import {
   toStatePayload,
   updateOwned,
 } from "./player.js";
-import { compareRank, relationTo } from "./ranking.js";
+import { compareRank } from "./ranking.js";
+import {popClone} from "./classes/clone.js";
 
 export const DUMMY_ID = "dummy";
 
@@ -44,10 +44,11 @@ const NO_CONTROLS = {
   secondaryPressed: false,
 };
 
-export function createGame(localId, world, name) {
+export function createGame(localId, world, name, sfx) {
   const game = {
     localId,
     world,
+    sfx,
     players: new Map(),
     entities: new Map(),
     foodTimer: FOOD_INTERVAL_S,
@@ -213,6 +214,12 @@ export function handleState(game, payload) {
   setPlayerClass(player, payload.classId);
   applyStatePayload(player, payload);
   syncReplicatedEntities(game, player, payload.entities);
+}
+
+export function handleClonePopped(game, payload) {
+  const entity = game.entities.get(payload.id);
+  if (!entity) return;
+  popClone(game, entity);
 }
 
 export function handleCatch(game, payload) {

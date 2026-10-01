@@ -10,6 +10,7 @@ import {
 import { addScore } from "../player.js";
 import { randomFreePosition } from "../map.js";
 import { createEntity } from "./entity.js";
+import clonePopSound from "../assets/sfx/clone/vanish.mp3";
 
 export function createFood(id, x, y, warningLeft = FOOD_WARNING_S) {
   return createEntity({
@@ -54,6 +55,7 @@ export const FOOD_DEF = Object.freeze({
     ctx.fill();
   },
   onTouch(food, toucher, game, net) {
+    game.sfx.play(eatFoodSound, entity, game.players.get(game.localId));
     game.entities.delete(food.id);
     addScore(toucher, SCORE_FOOD);
     toucher.boostLeft = BOOST_S;

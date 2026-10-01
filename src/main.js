@@ -4,6 +4,7 @@ import {
   createGame,
   handleBye,
   handleCatch,
+  handleClonePopped,
   handleFoodEaten,
   handleFoodSpawn,
   handleFoodSync,
@@ -117,7 +118,7 @@ async function enterRoom(code) {
   const name = (nameInput.value.trim().slice(0, 8) || loadName().trim().slice(0, 8));
   nameInput.value = name;
   localStorage.setItem(NAME_KEY, name);
-  game = createGame(playerId, world, name);
+  game = createGame(playerId, world, name, sfx);
 
   await joinRoom(
     code,
@@ -127,6 +128,7 @@ async function enterRoom(code) {
       [NetEvent.HELLO]: () => handleHello(game, net),
       [NetEvent.BYE]: (payload) => handleBye(game, payload),
       [NetEvent.CATCH]: (payload) => handleCatch(game, payload),
+      [NetEvent.CLONE_POPPED]: (payload) => handleClonePopped(game, payload),
       [NetEvent.FOOD_SPAWN]: (payload) => handleFoodSpawn(game, payload),
       [NetEvent.FOOD_EATEN]: (payload) => handleFoodEaten(game, payload),
       [NetEvent.FOOD_SYNC]: (payload) => handleFoodSync(game, payload),

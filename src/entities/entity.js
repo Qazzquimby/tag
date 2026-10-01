@@ -13,6 +13,7 @@ export function createEntity(fields) {
     solid: false,
     interactive: true,
     grantsVision: false,
+    isRemote: false,
     ownerId: null,
     ...fields,
   };

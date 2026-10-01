@@ -1,5 +1,12 @@
-import { Shape } from "../config.js";
-import { cloneId, createClone } from "../entities/clone.js";
+import {Shape} from "../config.js";
+import {cloneId, createClone} from "../entities/clone.js";
+import clonePopSound from "../assets/sfx/clone/vanish.mp3";
+
+
+export function popClone(game, entity) {
+  game.entities.delete(entity.id);
+  game.sfx.play(clonePopSound, entity, game.players.get(game.localId));
+}
 
 export default Object.freeze({
   name: "Clone",
@@ -33,6 +40,3 @@ export default Object.freeze({
     },
   },
 });
-
-
-// When any other player touches a clone, it should disappear and play an sfx.

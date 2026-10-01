@@ -13,6 +13,7 @@ export const NetEvent = Object.freeze({
   FOOD_EATEN: "food-eaten",
   FOOD_SYNC: "food-sync",
   ABILITY: "ability",
+  CLONE_POPPED: "clone-popped",
 });
 
 /**
@@ -38,6 +39,9 @@ export const NetEvent = Object.freeze({
  * @property {boolean} interactive
  * @property {boolean} grantsVision
  * @property {number} [friction]
+ * @property {boolean} isRemote
+ * @property {number} [tx]
+ * @property {number} [ty]
  * @property {string|null} [ownerId]
  * @property {number} [warningLeft]
  * @property {string} [name]

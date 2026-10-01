@@ -1,6 +1,7 @@
-import { EntityKind, Status } from "../config.js";
+import { EntityKind, REMOTE_SNAP_DIST, Status } from "../config.js";
 import { moveWithCollision } from "../collision.js";
 import { bodies } from "../bodies.js";
+import { smoothRemote } from "../player.js";
 import { FOOD_DEF } from "./food.js";
 import { PLAYER_DEF } from "./player-entity.js";
 import { RECALL_MARKER_DEF } from "./recall-marker.js";
@@ -24,12 +25,22 @@ export function syncReplicatedEntities(game, owner, states = []) {
 
   for (const state of states) {
     let entity = game.entities.get(state.id);
-    if (!entity) {
+    const isNew = !entity;
+    if (isNew) {
       entity = ENTITY_DEFS[state.kind].create(owner);
       game.entities.set(state.id, entity);
     }
-    entity.x = state.x;
-    entity.y = state.y;
+
+    entity.isRemote = true;
+    entity.tx = state.x;
+    entity.ty = state.y;
+    if (
+      isNew ||
+      Math.hypot(state.x - entity.x, state.y - entity.y) > REMOTE_SNAP_DIST
+    ) {
+      entity.x = state.x;
+      entity.y = state.y;
+    }
     entity.vx = state.vx;
     entity.vy = state.vy;
   }
@@ -57,6 +68,10 @@ export function updateEntities(game, dt) {
     }
 
     def.update?.(entity, dt, game);
+    if (entity.isRemote) {
+      smoothRemote(entity, dt);
+      continue;
+    }
     if (entity.vx === 0 && entity.vy === 0) continue;
 
     entity.vx *= Math.exp(-entity.friction * dt);
