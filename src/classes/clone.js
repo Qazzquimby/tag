@@ -2,6 +2,7 @@ import {Shape} from "../config.js";
 import {cloneId, createClone} from "../entities/clone.js";
 import clonePopSound from "../assets/sfx/clone/vanish.mp3";
 
+const CLONE_IMPULSE = 180;
 
 export function popClone(game, entity) {
   game.entities.delete(entity.id);
@@ -13,14 +14,21 @@ export default Object.freeze({
   shape: Shape.CIRCLE,
   symbol: "👥",
   radius: 13,
-  accel: 1400,
-  maxSpeed: 230,
+  accel: 1200,
+  maxSpeed: 220,
   friction: 5,
   primary: {
-    cooldown: 5,
+    cooldown: 6,
     label: "Clone",
-    use({ self, game }) {
+    use({ self, controls, game }) {
       const clone = createClone(self);
+      const dx = controls.aim.x - self.x;
+      const dy = controls.aim.y - self.y;
+      const distance = Math.hypot(dx, dy);
+      if (distance > 0) {
+        clone.vx = (dx / distance) * CLONE_IMPULSE;
+        clone.vy = (dy / distance) * CLONE_IMPULSE;
+      }
       game.entities.set(cloneId(self.id), clone);
     },
   },
@@ -33,10 +41,16 @@ export default Object.freeze({
 
       const x = self.x;
       const y = self.y;
+      const vx = self.vx;
+      const vy = self.vy;
       self.x = clone.x;
       self.y = clone.y;
+      self.vx = clone.vx;
+      self.vy = clone.vy;
       clone.x = x;
       clone.y = y;
+      clone.vx = vx;
+      clone.vy = vy;
     },
   },
 });
