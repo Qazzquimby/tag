@@ -227,7 +227,7 @@ export function handleCatch(game, payload) {
 
   const me = game.players.get(game.localId);
   if (me.status !== Status.ALIVE) return;
-  kill(me);
+  kill(game, me);
 }
 
 export function handleBye(game, payload) {

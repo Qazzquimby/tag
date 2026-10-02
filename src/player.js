@@ -11,6 +11,7 @@ import {
   REMOTE_SNAP_DIST,
   Status,
 } from "./config.js";
+import deathSound from "./assets/sfx/death.mp3";
 
 export function createPlayer({
   id,
@@ -148,11 +149,12 @@ export function updateOwned(player, controls, dt, game) {
   applyMovement(ctx);
 }
 
-export function kill(player) {
+export function kill(game, player) {
   player.status = Status.DEAD;
   player.stateTimer = DEAD_S;
   player.vx = 0;
   player.vy = 0;
+  game.sfx.play(deathSound, player, player);
 }
 
 export function startRound(player, players, world) {

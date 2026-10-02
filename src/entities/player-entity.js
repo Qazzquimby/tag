@@ -1,12 +1,10 @@
 import {
   BOOST_S,
-  EntityKind,
   NetEvent,
   RELATION_COLORS,
   Relation,
   SCORE_PLAYER,
   Status,
-  Shape,
 } from "../config.js";
 import { CLASS_DEFS } from "../classes/index.js";
 import { addScore, kill } from "../player.js";
@@ -68,7 +66,7 @@ export const PLAYER_DEF = Object.freeze({
 
     addScore(catcher, SCORE_PLAYER);
     catcher.boostLeft = BOOST_S;
-    kill(other);
+    kill(game, other);
     if (catcher.id === game.localId) {
       game.sfx.play(eatSound, catcher, game.players.get(game.localId));
     }
