@@ -107,7 +107,7 @@ export const ENTITY_FRICTION = 4;
 export const BOOST_S = 0;
 export const BOOST_MULT = 1.0;
 
-export const SEND_HZ = 10;
+export const SEND_HZ = 30;
 export const STALE_S = 5;
 
 export const SPAWN_SAMPLES = 12;
