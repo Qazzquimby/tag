@@ -10,11 +10,6 @@
 
 Add an optional `ClassDef.meter(player)` on abilities for charge bars.
 
-2. **Entities** (peels, bombs, sticky bombs, clone, walls, fly, strands): Monkey, Bomber, Demoman, Spider, Clone, Frog, Engineer.
-   - Add `game.entities`, an entity-type registry mirroring `classes/` with `update`, `draw` and `onTouch` hooks, and `NetEvent` entries for spawn and remove.
-   - The spawner simulates the entity and broadcasts it. The client that owns the touched player resolves the touch, the same way `CATCH` works.
-   - Files: `config.js`, `game.js`, `main.js`, `render.js`, `collision.js`, `types.js`, new `src/entities/*`.
-
 3. **Impulses and status effects** (stun, pull, push, fear, slow): Monkey peel, Bomber, Demoman, Ghost, Frog, Spider.
    - Add `player.effects`, an `applyImpulse` helper, and a targeted `NetEvent.EFFECT` handled like `handleCatch`.
    - Files: `player.js`, `game.js`, `config.js`, `main.js`.
@@ -38,7 +33,6 @@ Add an optional `ClassDef.meter(player)` on abilities for charge bars.
 
 | Class | Needs |
 |---|---|
-| Clone | Entities (2) |
 | Bomber | Entities (2), effects (3) |
 | Demoman | Entities (2), effects (3) |
 | Magnet | Entities (2), effects (3) |

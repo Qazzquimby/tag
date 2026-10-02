@@ -159,7 +159,7 @@ function frame(now) {
 
   const me = game ? game.players.get(game.localId) : null;
   updateAbilityHud(me);
-  announceAbilityUse(me);
+  if (me) announceAbilityUse(me);
   const choosing = me?.status === Status.CHOOSING;
   const selectedClass = choosing ? null : me?.classId;
   updateClassPicker(Boolean(me && me.status !== Status.ALIVE), selectedClass);
