@@ -49,6 +49,20 @@ function resolveY(player, half, map) {
   }
 }
 
+export function furthestFreePointAlong(map, half, from, to) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const steps = Math.ceil(Math.hypot(dx, dy) / 4);
+
+  for (let i = 0; i <= steps; i++) {
+    const t = steps === 0 ? 0 : 1 - i / steps;
+    const point = { x: from.x + dx * t, y: from.y + dy * t };
+    if (isAreaFree(map, point.x, point.y, half)) return point;
+  }
+
+  return from;
+}
+
 export function lastFreePointAlong(map, half, from, to) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;

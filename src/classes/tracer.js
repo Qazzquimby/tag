@@ -1,6 +1,6 @@
 import { Shape } from "../config.js";
 import { createRecallMarker, recallMarkerId } from "../entities/recall-marker.js";
-import { lastFreePointAlong } from "../collision.js";
+import { furthestFreePointAlong } from "../collision.js";
 import blinkSound from "../assets/sfx/tracer/blink.mp3";
 import recallSound from "../assets/sfx/tracer/recall.mp3";
 
@@ -55,7 +55,7 @@ const tracer = {
         x: self.x + (dx / distance) * travel,
         y: self.y + (dy / distance) * travel,
       };
-      const destination = lastFreePointAlong(game.world.map, self.radius, from, to);
+      const destination = furthestFreePointAlong(game.world.map, self.radius, from, to);
       self.x = destination.x;
       self.y = destination.y;
     },
