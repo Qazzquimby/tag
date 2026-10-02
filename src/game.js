@@ -34,6 +34,7 @@ import {
 import { compareRank } from "./ranking.js";
 import {popClone} from "./classes/clone.js";
 import deathSound from "./assets/sfx/death.mp3";
+import { leaveRoom } from "./net.js";
 
 export const DUMMY_ID = "dummy";
 
@@ -58,6 +59,8 @@ export function createGame(localId, world, name, sfx) {
     nextEntityId: 1,
     roundStartedAt: Date.now(),
     roundResult: null,
+    lastActiveAt: performance.now(),
+    leaving: false,
   };
 
   const spawn = pickSpawn(game.players, localId, world);
@@ -119,9 +122,23 @@ function updateRound(game) {
   }
 }
 
+function updateAfk(game, controls) {
+  const now = performance.now();
+  if (controls.move.x !== 0 || controls.move.y !== 0) {
+    game.lastActiveAt = now;
+    return;
+  }
+
+  if (game.leaving || now - game.lastActiveAt <= ROUND_S * 1000) return;
+
+  game.leaving = true;
+  void leaveRoom().then(() => location.assign(location.pathname));
+}
+
 export function updateGame(game, input, dt, net) {
   const me = game.players.get(game.localId);
   const controls = input.getControls();
+  updateAfk(game, controls);
   updateOwned(me, controls, dt, game, net);
 
   const dummy = game.players.get(DUMMY_ID);

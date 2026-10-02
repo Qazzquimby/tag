@@ -1,4 +1,10 @@
+Kick players who are afk for a full round. They stop being connected to a room.
+
+Add sfx on placing and detonating sticky bombs. Give sticky bombs an emoji sprite rather than being a circle (which looks like food)
+
+
 ## Roadmap for the remaining classes
+
 
 **To add a class that only needs the existing hooks** (Tracer-like, Skater momentum parts, the Monkey/Prince/Frog movement parts), put these in context:
 - `src/classes/index.js`
@@ -34,7 +40,6 @@ Add an optional `ClassDef.meter(player)` on abilities for charge bars.
 | Class | Needs |
 |---|---|
 | Bomber | Entities (2), effects (3) |
-| Demoman | Entities (2), effects (3) |
 | Magnet | Entities (2), effects (3) |
 | Skater | Reverse-momentum primary now; ice trail needs tiles (5) |
 | Prince | Movement override (4), tiles (5), position history like Tracer |

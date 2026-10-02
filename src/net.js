@@ -21,7 +21,16 @@ export function getRoomCode() {
 }
 
 export async function leaveRoom() {
-  if (channel && supabase) await supabase.removeChannel(channel);
+  if (channel && supabase) {
+    if (localId) {
+      await channel.send({
+        type: "broadcast",
+        event: NetEvent.BYE,
+        payload: { id: localId },
+      });
+    }
+    await supabase.removeChannel(channel);
+  }
   channel = null;
   roomCode = null;
 }
