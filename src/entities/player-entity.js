@@ -13,6 +13,7 @@ import { addScore, kill } from "../player.js";
 import { relationTo } from "../ranking.js";
 import { canSee } from "../vision.js";
 import { drawShape, drawSymbol, drawLabel } from "../render-shapes.js";
+import eatSound from "../assets/sfx/eat_food.mp3";
 
 function drawAimArrow(ctx, player, def, color) {
   const start = def.radius + 4;
@@ -68,6 +69,9 @@ export const PLAYER_DEF = Object.freeze({
     addScore(catcher, SCORE_PLAYER);
     catcher.boostLeft = BOOST_S;
     kill(other);
+    if (catcher.id === game.localId) {
+      game.sfx.play(eatSound, catcher, game.players.get(game.localId));
+    }
     if (!other.isDummy) net.send(NetEvent.CATCH, { victim: other.id });
   },
 });
