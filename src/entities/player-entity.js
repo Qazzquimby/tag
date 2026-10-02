@@ -66,7 +66,7 @@ export const PLAYER_DEF = Object.freeze({
 
     addScore(catcher, SCORE_PLAYER);
     catcher.boostLeft = BOOST_S;
-    kill(game, other);
+    kill(other);
     if (catcher.id === game.localId) {
       game.sfx.play(eatSound, catcher, game.players.get(game.localId));
     }

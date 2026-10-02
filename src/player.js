@@ -149,12 +149,11 @@ export function updateOwned(player, controls, dt, game) {
   applyMovement(ctx);
 }
 
-export function kill(game, player) {
+export function kill(player) {
   player.status = Status.DEAD;
   player.stateTimer = DEAD_S;
   player.vx = 0;
   player.vy = 0;
-  game.sfx.play(deathSound, player, player);
 }
 
 export function startRound(player, players, world) {

@@ -32,6 +32,7 @@ import {
 } from "./player.js";
 import { compareRank } from "./ranking.js";
 import {popClone} from "./classes/clone.js";
+import deathSound from "./assets/sfx/death.mp3";
 
 export const DUMMY_ID = "dummy";
 
@@ -227,7 +228,8 @@ export function handleCatch(game, payload) {
 
   const me = game.players.get(game.localId);
   if (me.status !== Status.ALIVE) return;
-  kill(game, me);
+  kill(me);
+  game.sfx.play(deathSound, player, player);
 }
 
 export function handleBye(game, payload) {

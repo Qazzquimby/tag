@@ -92,7 +92,7 @@ export const SPAWN_CLEARANCE = 20;
 export const SCORE_PLAYER = 10;
 export const SCORE_FOOD = 6;
 
-export const DEAD_S = 3;
+export const DEAD_S = 6;
 export const SPAWN_WARNING_S = 1.5;
 export const FOOD_WARNING_S = 1.5;
 
