@@ -6,12 +6,14 @@ import { FOOD_DEF } from "./food.js";
 import { PLAYER_DEF } from "./player-entity.js";
 import { RECALL_MARKER_DEF } from "./recall-marker.js";
 import { CLONE_DEF } from "./clone.js";
+import { STICKY_BOMB_DEF } from "./sticky-bomb.js";
 
 export const ENTITY_DEFS = Object.freeze({
   [EntityKind.PLAYER]: PLAYER_DEF,
   [EntityKind.FOOD]: FOOD_DEF,
   [EntityKind.RECALL_MARKER]: RECALL_MARKER_DEF,
   [EntityKind.CLONE]: CLONE_DEF,
+  [EntityKind.STICKY_BOMB]: STICKY_BOMB_DEF,
 });
 
 export function replicatedStates(game, ownerId) {
@@ -27,7 +29,7 @@ export function syncReplicatedEntities(game, owner, states = []) {
     let entity = game.entities.get(state.id);
     const isNew = !entity;
     if (isNew) {
-      entity = ENTITY_DEFS[state.kind].create(owner);
+      entity = ENTITY_DEFS[state.kind].create(owner, state.id);
       game.entities.set(state.id, entity);
     }
 

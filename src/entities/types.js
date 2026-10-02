@@ -10,5 +10,5 @@
  * @property {(entity: Entity, toucher: Entity, game: Object, net: Object) => void} [onTouch]
  * @property {boolean} [despawnWithOwner]
  * @property {boolean} [replicated]
- * @property {(owner: Entity) => Entity} [create]
+ * @property {(owner: Entity, id: string) => Entity} [create]
  */

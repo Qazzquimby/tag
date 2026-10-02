@@ -45,6 +45,7 @@ export function createPlayer({
     scoredAt: Date.now(),
     boostLeft: 0,
     stateTimer: 0,
+    stunLeft: 0,
     lastSeen: performance.now(),
     isDummy,
     classState: null,
@@ -101,14 +102,16 @@ function applyMovement(ctx) {
   };
   def.adjustIntent?.(ctx, intent);
 
+  const carriedSpeed = Math.hypot(self.vx, self.vy);
   self.vx += intent.moveX * intent.accel * boost * dt;
   self.vy += intent.moveY * intent.accel * boost * dt;
 
   const damp = Math.exp(-intent.friction * dt);
+  const retainedSpeed = carriedSpeed * damp;
   self.vx *= damp;
   self.vy *= damp;
 
-  const maxSpeed = intent.maxSpeed * boost;
+  const maxSpeed = Math.max(intent.maxSpeed * boost, retainedSpeed);
   const speed = Math.hypot(self.vx, self.vy);
   if (speed > maxSpeed) {
     self.vx = (self.vx / speed) * maxSpeed;
@@ -125,10 +128,22 @@ function useAbility(player, ctx, def, slot, pressed) {
   player.cooldowns[slot] = ability.cooldown;
 }
 
-export function updateOwned(player, controls, dt, game) {
+function withoutInput(controls) {
+  return {
+    ...controls,
+    move: { x: 0, y: 0 },
+    primary: false,
+    secondary: false,
+    primaryPressed: false,
+    secondaryPressed: false,
+  };
+}
+
+export function updateOwned(player, controls, dt, game, net) {
   if (player.boostLeft > 0) player.boostLeft = Math.max(0, player.boostLeft - dt);
   player.cooldowns.primary = Math.max(0, player.cooldowns.primary - dt);
   player.cooldowns.secondary = Math.max(0, player.cooldowns.secondary - dt);
+  player.stunLeft = Math.max(0, player.stunLeft - dt);
 
   if (player.status === Status.DEAD) {
     updateDead(player, dt, game.players, game.world);
@@ -140,8 +155,9 @@ export function updateOwned(player, controls, dt, game) {
     return;
   }
 
-  player.aim = Math.atan2(controls.aim.y - player.y, controls.aim.x - player.x);
-  const ctx = { self: player, controls, dt, game };
+  const activeControls = player.stunLeft > 0 ? withoutInput(controls) : controls;
+  player.aim = Math.atan2(activeControls.aim.y - player.y, activeControls.aim.x - player.x);
+  const ctx = { self: player, controls: activeControls, dt, game, net };
   const def = CLASS_DEFS[player.classId];
   def.update?.(ctx);
   useAbility(player, ctx, def, "primary", controls.primaryPressed);
@@ -154,6 +170,13 @@ export function kill(player) {
   player.stateTimer = DEAD_S;
   player.vx = 0;
   player.vy = 0;
+  player.stunLeft = 0;
+}
+
+export function applyKnockback(player, dvx, dvy, stunS) {
+  player.vx += dvx;
+  player.vy += dvy;
+  player.stunLeft = Math.max(player.stunLeft, stunS);
 }
 
 export function startRound(player, players, world) {

@@ -141,13 +141,13 @@ left click charges tongue, curved projectile (similar to monkey jetpack). On hit
 Right click repositions a fly to the cursor position (moves over time, doesnt teleport). Frog has vision from the fly and can grapple to it with tongue.
 
 
-# Clone
-left click make a visually identical copy of you with your current momentum.
-Right click to switch locations with the clone
-
-
 # Engineer
 Press into wall to destroy it after a delay.
 Left click places a 1x3 wall (show preview). Wall segments are destroyed when someone touches it, after a delay.
 right click to push a nearby wall orthogonally away.
 
+# Car
+driving controls, w is forwards, left and right steer.
+Forwards is determined by car facing, not mouse
+left click beeps horn as long as its held
+right mouse button changes physics for drifting.

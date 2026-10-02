@@ -14,6 +14,7 @@
  * @property {Controls} controls
  * @property {number} dt
  * @property {Object} game
+ * @property {{send: (event: string, payload: Object) => void}} net
  */
 
 /**

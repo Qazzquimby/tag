@@ -20,6 +20,7 @@ import {
 import { resolveBodyCollisions } from "./collision.js";
 import {
   applyStatePayload,
+  applyKnockback,
   createPlayer,
   kill,
   pickSpawn,
@@ -121,10 +122,10 @@ function updateRound(game) {
 export function updateGame(game, input, dt, net) {
   const me = game.players.get(game.localId);
   const controls = input.getControls();
-  updateOwned(me, controls, dt, game);
+  updateOwned(me, controls, dt, game, net);
 
   const dummy = game.players.get(DUMMY_ID);
-  if (dummy) updateOwned(dummy, NO_CONTROLS, dt, game);
+  if (dummy) updateOwned(dummy, NO_CONTROLS, dt, game, net);
   updateRound(game);
 
   const now = performance.now();
@@ -223,13 +224,21 @@ export function handleClonePopped(game, payload) {
   popClone(game, entity);
 }
 
+export function handleImpulse(game, payload) {
+  if (payload.target !== game.localId) return;
+
+  const me = game.players.get(game.localId);
+  if (me.status !== Status.ALIVE) return;
+  applyKnockback(me, payload.dvx, payload.dvy, payload.stun);
+}
+
 export function handleCatch(game, payload) {
   if (payload.victim !== game.localId) return;
 
   const me = game.players.get(game.localId);
   if (me.status !== Status.ALIVE) return;
   kill(me);
-  game.sfx.play(deathSound, player, player);
+  game.sfx.play(deathSound, me, me);
 }
 
 export function handleBye(game, payload) {
