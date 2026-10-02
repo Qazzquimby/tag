@@ -62,7 +62,8 @@ function drawVisionShade(ctx, world, origin, game) {
   const shade = visionCanvas.getContext("2d");
   shade.globalCompositeOperation = "source-over";
   shade.globalAlpha = 1;
-  shade.fillStyle = "rgba(0, 0, 0, 0.58)";
+  shade.clearRect(0, 0, world.W, world.H);
+  shade.fillStyle = "rgba(0, 0, 0, 0.40)";
   shade.fillRect(0, 0, world.W, world.H);
   shade.globalCompositeOperation = "destination-out";
   shade.fillStyle = "#fff";
