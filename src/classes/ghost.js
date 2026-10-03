@@ -12,8 +12,8 @@ function applyFear(player, payload) {
   player.fearLeft = payload.duration;
   player.fearX = payload.x;
   player.fearY = payload.y;
-  player.vx = 0;
-  player.vy = 0;
+  player.vx = 20;
+  player.vy = 20;
 }
 
 const ghost = {
