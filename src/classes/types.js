@@ -51,7 +51,7 @@
  * @property {(player: import("../config.js").Player) => Object} [netState]
  * @property {(player: import("../config.js").Player) => void} [onScore]
  * @property {(player: import("../config.js").Player, viewer: import("../config.js").Player) => number} [viewAlpha]
- * @property {(viewer: import("../config.js").Player) => boolean} [seesThroughWalls]
+ * @property {(viewer: import("../config.js").Player) => number} [xrayRadius] Radius in pixels within which walls do not block sight.
  * @property {(viewer: import("../config.js").Player, target: import("../config.js").Player, game: Object) => boolean} [senses]
  * @property {(ctx: ClassContext, moveDefault: (ctx: ClassContext) => void) => void} [move] Replaces default movement integration.
  * @property {Ability} [primary]

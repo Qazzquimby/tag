@@ -8,6 +8,8 @@ export function illusionId(ownerId) {
   return `illusion:${ownerId}`;
 }
 
+const ILLUSION_SPEED = 1200;
+
 export function createIllusion(owner, appearance) {
   return createEntity({
     id: illusionId(owner.id),
@@ -53,8 +55,8 @@ export const ILLUSION_DEF = Object.freeze({
     const dy = prey.y - entity.y;
     const distance = Math.hypot(dx, dy);
     if (distance > 0) {
-      entity.vx += (dx / distance) * 400 * dt;
-      entity.vy += (dy / distance) * 400 * dt;
+      entity.vx += (dx / distance) * ILLUSION_SPEED * dt;
+      entity.vy += (dy / distance) * ILLUSION_SPEED * dt;
     }
   },
   draw(ctx, entity, viewer, now, game) {

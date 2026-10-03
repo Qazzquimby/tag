@@ -63,4 +63,3 @@ const monster = {
 
 export default Object.freeze(monster);
 
-// todo shouldnt see trail through walls

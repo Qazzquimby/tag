@@ -7,6 +7,7 @@ const GHOST_CHARGE_S = 5;
 const GHOST_RECHARGE_RATE = 2;
 const FEAR_S = 2;
 const FEAR_RADIUS = 220;
+const GHOST_XRAY_RADIUS = 250;
 
 function applyFear(player, payload) {
   player.fearLeft = payload.duration;
@@ -53,8 +54,8 @@ const ghost = {
       phasing: Boolean(state?.phasing),
     };
   },
-  seesThroughWalls(viewer) {
-    return Boolean(viewer.classNet.phasing);
+  xrayRadius(viewer) {
+    return viewer.classNet.phasing ? GHOST_XRAY_RADIUS : 0;
   },
   viewAlpha(player, viewer) {
     const distance = Math.hypot(player.x - viewer.x, player.y - viewer.y);
@@ -69,7 +70,7 @@ const ghost = {
       self.classState.disguiseLeft = 3;
       for (const target of game.players.values()) {
         if (target.id === self.id || target.status !== Status.ALIVE) continue;
-        if (relationTo(self, target) !== Relation.ABOVE) continue;
+        // if (relationTo(self, target) !== Relation.ABOVE) continue;
         if (Math.hypot(target.x - self.x, target.y - self.y) > FEAR_RADIUS) continue;
         const payload = {victim: target.id, x: self.x, y: self.y, duration: FEAR_S};
         if (target.isDummy) applyFear(target, payload.x, payload.y, payload.duration);
@@ -92,6 +93,5 @@ const ghost = {
 export default Object.freeze(ghost);
 
 
-// todo, only see through nearby walls, not see the whole map
-// todo apply a cd on phasing to avoid flickering it for vision
+ // todo apply a cd on phasing to avoid flickering it for vision
 // todo draw effect radius for fear

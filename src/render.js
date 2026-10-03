@@ -1,6 +1,6 @@
 import { MAP_CELL, Status } from "./config.js";
 import { isSolid } from "./map.js";
-import { canSee, visionOrigins, visibilityPolygon } from "./vision.js";
+import { canSee, canSeePoint, visionOrigins, visibilityPolygon, xrayRadius } from "./vision.js";
 import { bodies } from "./collision.js";
 import { ENTITY_DEFS } from "./entities/index.js";
 import { CLASS_DEFS, PlayerClass } from "./classes/index.js";
@@ -13,7 +13,7 @@ export function draw(ctx, world, game, now) {
   ctx.clearRect(0, 0, world.W, world.H);
   drawGrid(ctx, world);
   drawWalls(ctx, world);
-  if (me?.classId === PlayerClass.MONSTER) drawMonsterTrails(ctx, game, world, now);
+  if (me?.classId === PlayerClass.MONSTER) drawMonsterTrails(ctx, game, world, now, me);
 
   for (const body of bodies(game)) {
     const def = ENTITY_DEFS[body.kind];
@@ -23,7 +23,7 @@ export function draw(ctx, world, game, now) {
     if (visible) def.draw(ctx, body, me, now, game);
   }
 
-  if (!CLASS_DEFS[me.classId].seesThroughWalls?.(me)) drawVisionShade(ctx, world, me, game);
+  drawVisionShade(ctx, world, me, game);
   drawOverlay(ctx, world, game);
 }
 
@@ -54,9 +54,11 @@ function drawWalls(ctx, world) {
   }
 }
 
-function drawMonsterTrails(ctx, game, world, now) {
+function drawMonsterTrails(ctx, game, world, now, me) {
   const cell = world.map.cell;
   for (const tile of trailTiles(game.trails, world.map, now)) {
+    const center = {x: (tile.col + 0.5) * cell, y: (tile.row + 0.5) * cell};
+    if (!canSeePoint(game, me, center)) continue;
     ctx.globalAlpha = tile.strength * 0.45;
     ctx.fillStyle = "#a5e66e";
     ctx.fillRect(tile.col * cell + 3, tile.row * cell + 3, cell - 6, cell - 6);
@@ -87,6 +89,13 @@ function drawVisionShade(ctx, world, origin, game) {
     shade.moveTo(points[0].x, points[0].y);
     for (let i = 1; i < points.length; i++) shade.lineTo(points[i].x, points[i].y);
     shade.closePath();
+    shade.fill();
+  }
+
+  const radius = xrayRadius(origin);
+  if (radius > 0) {
+    shade.beginPath();
+    shade.arc(origin.x, origin.y, radius, 0, Math.PI * 2);
     shade.fill();
   }
 

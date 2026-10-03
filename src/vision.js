@@ -48,13 +48,23 @@ export function visionOrigins(game, viewer) {
   ];
 }
 
+export function xrayRadius(viewer) {
+  return CLASS_DEFS[viewer.classId].xrayRadius?.(viewer) ?? 0;
+}
+
+export function canSeePoint(game, viewer, point) {
+  const radius = xrayRadius(viewer);
+  if (radius > 0 && Math.hypot(point.x - viewer.x, point.y - viewer.y) <= radius) {
+    return true;
+  }
+  return visionOrigins(game, viewer).some((origin) =>
+    hasLineOfSight(game.world.map, origin, point),
+  );
+}
+
 export function canSee(game, viewer, target) {
   const def = CLASS_DEFS[viewer.classId];
-  if (def.seesThroughWalls?.(viewer)) return true;
-  if (def.senses?.(viewer, target, game)) return true;
-  return visionOrigins(game, viewer).some((origin) =>
-    hasLineOfSight(game.world.map, origin, target),
-  );
+  return def.senses?.(viewer, target, game) || canSeePoint(game, viewer, target);
 }
 
 export function visibilityPolygon(map, origin, rayCount = VISION_RAYS) {
