@@ -2,7 +2,7 @@ import { Shape } from "../config.js";
 import { lastFreePointAlong, moveWithCollision } from "../collision.js";
 import { isAreaFree } from "../map.js";
 import slideSound from "../assets/sfx/wall_runner/slide.wav";
-import jumpSound from "../assets/sfx/wall_runner/jump.wav";4
+import jumpSound from "../assets/sfx/wall_runner/jump.wav";
 
 const RUN_SPEED = 350;
 const JUMP_SPEED = 800;
@@ -11,6 +11,7 @@ const WALL_PROBE = 2;
 const JUMP_RANGE = 20;
 const SEEK_MIN_SPEED = 120;
 const BLOCKED_TOLERANCE = 1e-3;
+const WRAP_CLEARANCE = 0.5;
 
 const DIRECTIONS = Object.freeze([
   Object.freeze({ x: 1, y: 0 }),
@@ -77,6 +78,20 @@ function fly(ctx, moveDefault) {
   }
 }
 
+function wrapConvexCorner(self, state, oldDir, oldNormal, map) {
+  const positionAlongWall = dot(self, oldDir);
+  const corner =
+    Math.floor((positionAlongWall - self.radius) / map.cell + 1e-6) *
+    map.cell;
+  const target = corner + self.radius + WRAP_CLEARANCE;
+  const offset = target - positionAlongWall;
+
+  self.x += oldDir.x * offset;
+  self.y += oldDir.y * offset;
+  state.dir = { x: -oldNormal.x, y: -oldNormal.y };
+  state.normal = { x: oldDir.x, y: oldDir.y };
+}
+
 function runAlongWall(ctx) {
   const { self, dt, game } = ctx;
   const state = self.classState;
@@ -101,7 +116,11 @@ function runAlongWall(ctx) {
       self.radius,
     )
   ) {
-    state.attached = false;
+    if (state.grinding) {
+      wrapConvexCorner(self, state, oldDir, oldNormal, game.world.map);
+    } else {
+      state.attached = false;
+    }
   }
 
   self.vx = state.dir.x * RUN_SPEED;
@@ -120,6 +139,7 @@ const wallRunner = {
     return {
       attached: false,
       seeking: false,
+      grinding: false,
       hint: null,
       normal: null,
       dir: null,
@@ -133,6 +153,11 @@ const wallRunner = {
   move(ctx, moveDefault) {
     const { self } = ctx;
     const state = self.classState;
+    if (state.grinding && !ctx.controls.primary) {
+      state.grinding = false;
+      state.attached = false;
+      state.seeking = false;
+    }
     if (state.attached && self.stunLeft > 0) state.attached = false;
 
     if (state.attached) {
@@ -143,13 +168,12 @@ const wallRunner = {
   },
   primary: {
     label: "Grind",
-    cooldown: 0.4,
+    cooldown: 0.1,
     use({ self, game }) {
       const state = self.classState;
       if (state.attached) {
-        state.attached = false;
-        state.seeking = false;
-        return;
+        state.grinding = true;
+        return false;
       }
 
       const map = game.world.map;
@@ -178,6 +202,7 @@ const wallRunner = {
       self.vx = nearestDirection.x * JUMP_SPEED;
       self.vy = nearestDirection.y * JUMP_SPEED;
       state.seeking = true;
+      state.grinding = true;
     },
   },
   secondary: {
