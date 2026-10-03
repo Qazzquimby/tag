@@ -1,30 +1,144 @@
 import { MAP_CELL } from "./config.js";
 
-const WALL_RECTS = [
-  { col: 3, row: 2, cols: 1, rows: 4 },
-  { col: 14, row: 6, cols: 1, rows: 4 },
-  { col: 7, row: 4, cols: 4, rows: 1 },
-  { col: 7, row: 7, cols: 4, rows: 1 },
-  { col: 2, row: 9, cols: 4, rows: 1 },
-  { col: 12, row: 1, cols: 4, rows: 1 },
-];
-
 const EPSILON = 1e-6;
 
-export function createMap(W, H) {
+// Tuning
+const CELLS_PER_PLAYER = 85;   // roughly matches your old 18x12 map at 2-3 players
+const MIN_CELLS = 200;
+const ASPECT = 1.5;            // width : height
+const CHUNK = 6;               // chunk size in cells (only used to spread obstacles out)
+const GAP = 2;                 // min free cells between any two obstacles / the border
+
+// Obstacle shapes as [col, row] cells. None contain holes, so they can't enclose space.
+const SHAPES = [
+  [[0, 0], [1, 0], [2, 0], [3, 0]],                           // bar 4
+  [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],           // bar 6
+  [[0, 0], [1, 0], [2, 0]],                                   // bar 3
+  [[0, 0], [1, 0], [2, 0], [0, 1], [1, 1], [2, 1]],           // thick bar
+  [[0, 0], [1, 0], [0, 1], [1, 1]],                           // block 2x2
+  [[0, 0]],                                                   // pillar
+  [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2]],                   // L
+  [[0, 0], [1, 0], [2, 0], [1, 1], [1, 2]],                   // T
+  [[0, 0], [1, 0], [1, 1], [2, 1], [2, 2]],                   // zigzag
+  [[1, 0], [0, 1], [1, 1], [2, 1], [1, 2]],                   // plus
+];
+
+/** World size in pixels for a given player count. */
+export function getWorldSize(playerCount) {
+  const area = Math.max(MIN_CELLS, playerCount * CELLS_PER_PLAYER);
+  const cols = Math.round(Math.sqrt(area * ASPECT));
+  const rows = Math.round(area / cols);
+  return { W: cols * MAP_CELL, H: rows * MAP_CELL };
+}
+
+function transform(shape, rot, mirror) {
+  let cells = shape.map(([c, r]) => [mirror ? -c : c, r]);
+  for (let i = 0; i < rot; i++) cells = cells.map(([c, r]) => [-r, c]);
+  const minC = Math.min(...cells.map((p) => p[0]));
+  const minR = Math.min(...cells.map((p) => p[1]));
+  return cells.map(([c, r]) => [c - minC, r - minR]);
+}
+
+function shuffle(arr, rng) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function canPlace(solid, cols, rows, cells, ox, oy) {
+  for (const [dc, dr] of cells) {
+    const c = ox + dc;
+    const r = oy + dr;
+    // Stay GAP cells away from the border
+    if (c < GAP || r < GAP || c >= cols - GAP || r >= rows - GAP) return false;
+    // Stay GAP cells away from every other obstacle
+    for (let rr = r - GAP; rr <= r + GAP; rr++) {
+      for (let cc = c - GAP; cc <= c + GAP; cc++) {
+        if (solid[rr * cols + cc]) return false;
+      }
+    }
+  }
+  return true;
+}
+
+/**
+ * Keep only the largest connected free region; everything else becomes solid.
+ * Obstacles are already spaced so this should be a no-op, but it is a hard
+ * guarantee that nobody can spawn in a sealed-off pocket.
+ */
+function sealDisconnected(solid, cols, rows) {
+  const region = new Int32Array(cols * rows).fill(-1);
+  const sizes = [];
+  const stack = [];
+
+  for (let start = 0; start < solid.length; start++) {
+    if (solid[start] || region[start] !== -1) continue;
+    const id = sizes.length;
+    let size = 0;
+    region[start] = id;
+    stack.push(start);
+    while (stack.length) {
+      const i = stack.pop();
+      size++;
+      const c = i % cols;
+      const r = (i / cols) | 0;
+      const next = [
+        c > 0 ? i - 1 : -1,
+        c < cols - 1 ? i + 1 : -1,
+        r > 0 ? i - cols : -1,
+        r < rows - 1 ? i + cols : -1,
+      ];
+      for (const n of next) {
+        if (n >= 0 && !solid[n] && region[n] === -1) {
+          region[n] = id;
+          stack.push(n);
+        }
+      }
+    }
+    sizes.push(size);
+  }
+
+  if (sizes.length <= 1) return;
+  const best = sizes.indexOf(Math.max(...sizes));
+  for (let i = 0; i < solid.length; i++) {
+    if (!solid[i] && region[i] !== best) solid[i] = 1;
+  }
+}
+
+/**
+ * Pass a seeded rng (e.g. mulberry32) if every client must build the same map.
+ */
+export function createMap(W, H, rng = Math.random) {
   const cols = Math.ceil(W / MAP_CELL);
   const rows = Math.ceil(H / MAP_CELL);
   const solid = new Uint8Array(cols * rows);
 
-  for (const rect of WALL_RECTS) {
-    for (let row = rect.row; row < rect.row + rect.rows; row++) {
-      for (let col = rect.col; col < rect.col + rect.cols; col++) {
-        if (col >= 0 && col < cols && row >= 0 && row < rows) {
-          solid[row * cols + col] = 1;
-        }
-      }
+  // Visit chunks in random order, but place shapes at jittered positions
+  // (not snapped to chunk edges) with random rotation/mirroring, so the
+  // result doesn't read as a grid.
+  const chunks = [];
+  for (let cy = 0; cy < rows; cy += CHUNK) {
+    for (let cx = 0; cx < cols; cx += CHUNK) chunks.push([cx, cy]);
+  }
+  shuffle(chunks, rng);
+
+  for (const [cx, cy] of chunks) {
+    const wanted = rng() < 0.25 ? 2 : 1; // some chunks get 2 obstacles, rest 1
+    let placed = 0;
+    for (let attempt = 0; attempt < 12 && placed < wanted; attempt++) {
+      const shape = SHAPES[Math.floor(rng() * SHAPES.length)];
+      const cells = transform(shape, Math.floor(rng() * 4), rng() < 0.5);
+      const ox = cx - 1 + Math.floor(rng() * (CHUNK + 2));
+      const oy = cy - 1 + Math.floor(rng() * (CHUNK + 2));
+      if (!canPlace(solid, cols, rows, cells, ox, oy)) continue;
+      for (const [dc, dr] of cells) solid[(oy + dr) * cols + (ox + dc)] = 1;
+      placed++;
     }
   }
+
+  sealDisconnected(solid, cols, rows);
 
   return { cell: MAP_CELL, cols, rows, solid };
 }
