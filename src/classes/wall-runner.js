@@ -1,6 +1,8 @@
 import { Shape } from "../config.js";
 import { lastFreePointAlong, moveWithCollision } from "../collision.js";
 import { isAreaFree } from "../map.js";
+import slideSound from "../assets/sfx/wall_runner/slide.wav";
+import jumpSound from "../assets/sfx/wall_runner/jump.wav";4
 
 const RUN_SPEED = 350;
 const JUMP_SPEED = 800;
@@ -71,6 +73,7 @@ function fly(ctx, moveDefault) {
 
   if (contactNormal) {
     attach(self, state, contactNormal, state.hint);
+    game.sfx.play(slideSound, self, game.players.get(game.localId), {volume:0.2});
   }
 }
 
@@ -139,7 +142,7 @@ const wallRunner = {
     fly(ctx, moveDefault);
   },
   primary: {
-    label: "Leap",
+    label: "Grind",
     cooldown: 0.4,
     use({ self, game }) {
       const state = self.classState;
@@ -178,29 +181,12 @@ const wallRunner = {
     },
   },
   secondary: {
-    label: "Launch",
-    cooldown: 0.4,
+    label: "Jump Off",
+    sound: jumpSound,
+    cooldown: 0.1,
     use({ self }) {
       const state = self.classState;
       if (!state.attached) return false;
-
-      // const dx = controls.aim.x - self.x;
-      // const dy = controls.aim.y - self.y;
-      // const distance = Math.hypot(dx, dy);
-      // if (distance === 0) return false;
-      //
-      // let direction = { x: dx / distance, y: dy / distance };
-      // if (dot(direction, state.normal) < 0) {
-      //   direction = {
-      //     x: direction.x - state.normal.x * dot(direction, state.normal),
-      //     y: direction.y - state.normal.y * dot(direction, state.normal),
-      //   };
-      //   const tangentLength = Math.hypot(direction.x, direction.y);
-      //   direction =
-      //     tangentLength === 0
-      //       ? state.normal
-      //       : { x: direction.x / tangentLength, y: direction.y / tangentLength };
-      // }
 
       state.attached = false;
       state.seeking = true;

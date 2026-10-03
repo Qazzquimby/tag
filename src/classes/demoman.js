@@ -78,7 +78,6 @@ const demoman = {
   },
   secondary: {
     label: "Detonate",
-    sound: stickyDetonateSound,
     cooldown: DETONATE_COOLDOWN,
     use({ self, game, net }) {
       const bombs = armedBombs(self, game);
@@ -98,11 +97,17 @@ const demoman = {
         }
       }
 
-      for (const bomb of bombs) game.entities.delete(bomb.id);
+      for (const bomb of bombs) {
+        game.sfx.play(
+          stickyDetonateSound,
+          bomb,
+          game.players.get(game.localId),
+        );
+        game.entities.delete(bomb.id);
+      }
     },
   },
 };
 
 export default Object.freeze(demoman);
 
-// todo only play explosion sfx if at least one sticky was detonated
