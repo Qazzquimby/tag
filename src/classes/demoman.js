@@ -8,7 +8,7 @@ const THROW_COOLDOWN = 1;
 const DETONATE_COOLDOWN = 0.5;
 const THROW_MAX_DISTANCE = 450;
 const BLAST_RADIUS = 150;
-const BLAST_IMPULSE = 1600;
+const BLAST_IMPULSE = 1200;
 const BLAST_STUN_S = 0.25;
 
 function armedBombs(self, game) {
@@ -104,3 +104,5 @@ const demoman = {
 };
 
 export default Object.freeze(demoman);
+
+// todo only play explosion sfx if at least one sticky was detonated

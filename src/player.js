@@ -1,5 +1,5 @@
 import { moveWithCollision } from "./collision.js";
-import { CLASS_DEFS, PlayerClass } from "./classes/index.js";
+import {CLASS_DEFS, PlayerClass} from "./classes/index.js";
 import { randomFreePosition } from "./map.js";
 import {
   BOOST_MULT,
@@ -15,7 +15,7 @@ import {
 export function createPlayer({
   id,
   name,
-  classId = PlayerClass.BALANCED,
+  classId ,
   x,
   y,
   isDummy = false,

@@ -90,6 +90,7 @@ export function createGame(localId, world, name, sfx) {
     createPlayer({
       id: localId,
       name,
+      classId: PlayerClass.CLONE,
       status: Status.CHOOSING,
       x: spawn.x,
       y: spawn.y,
@@ -229,7 +230,7 @@ export function toggleDummy(game) {
     createPlayer({
       id: DUMMY_ID,
       name: "DUMMY",
-      classId: PlayerClass.BALANCED,
+      classId: PlayerClass.TRACER,
       x: spawn.x,
       y: spawn.y,
       isDummy: true,

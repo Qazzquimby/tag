@@ -170,21 +170,13 @@ function frame(now) {
 }
 
 createBtn.addEventListener("click", async () => {
-  try {
-    const code = makeRoomCode();
-    roomInput.value = code;
-    await enterRoom(code);
-  } catch (err) {
-    errorText = err.message;
-  }
+  const code = makeRoomCode();
+  roomInput.value = code;
+  await enterRoom(code);
 });
 
 joinBtn.addEventListener("click", async () => {
-  try {
-    await enterRoom(roomInput.value);
-  } catch (err) {
-    errorText = err.message;
-  }
+  await enterRoom(roomInput.value);
 });
 
 copyBtn.addEventListener("click", async () => {
@@ -198,7 +190,7 @@ nameInput.value = loadName();
 const initialRoom = new URLSearchParams(location.search).get("room");
 if (initialRoom) {
   roomInput.value = initialRoom;
-  enterRoom(initialRoom).catch((err) => (errorText = err.message));
+  await enterRoom(initialRoom)
 }
 
 requestAnimationFrame(frame);
