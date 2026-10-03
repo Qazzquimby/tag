@@ -1,11 +1,12 @@
 import {NetEvent, Relation, Shape, Status} from "../config.js";
 import {isAreaFree} from "../map.js";
 import {relationTo} from "../ranking.js";
+import booSound from "../assets/sfx/ghost/boo.mp3";
 
 const GHOST_CHARGE_S = 5;
 const GHOST_RECHARGE_RATE = 2;
 const FEAR_S = 2;
-const FEAR_RADIUS = 180;
+const FEAR_RADIUS = 220;
 
 function applyFear(player, payload) {
   player.fearLeft = payload.duration;
@@ -20,9 +21,9 @@ const ghost = {
   shape: Shape.CIRCLE,
   symbol: "👻",
   radius: 12,
-  accel: 800,
-  maxSpeed: 155,
-  friction: 5,
+  accel: 1100,
+  maxSpeed: 200,
+  friction: 3,
   createState() {
     return {charge: GHOST_CHARGE_S, disguiseLeft: 0, phasing: false};
   },
@@ -42,8 +43,8 @@ const ghost = {
   adjustIntent({self}, intent) {
     if (!self.classState.phasing) return;
     intent.phase = true;
-    intent.maxSpeed *= 0.5;
-    intent.accel *= 0.5;
+    // intent.maxSpeed *= 0.5;
+    intent.accel *= 0.3;
   },
   netState(player) {
     const state = player.classState;
@@ -57,12 +58,12 @@ const ghost = {
   },
   viewAlpha(player, viewer) {
     const distance = Math.hypot(player.x - viewer.x, player.y - viewer.y);
-    const alpha = player.id === viewer.id ? 1 : Math.max(0.15, Math.min(1, 1 - distance / 500));
-    return alpha * (player.classNet?.phasing ? 0.5 : 1);
+    const alpha = player.id === viewer.id ? 1 : Math.max(0, 1 - (distance / 300));
+    return alpha * (player.classNet?.phasing ? 0.1 : 1);
   },
   primary: {
-    label: "Fear",
-    sound: "../assets/sfx/clone/vanish.mp3",
+    label: "Boo",
+    sound: booSound,
     cooldown: 8,
     use({self, game, net}) {
       self.classState.disguiseLeft = 3;
@@ -78,8 +79,7 @@ const ghost = {
   },
   secondary: {
     label: "Phase",
-    sound: "../assets/sfx/wall_runner/slide.wav",
-    cooldown: 0.3,
+    cooldown: 2,
     meter(player) {
       return (player.classState?.charge ?? 0) / GHOST_CHARGE_S;
     },
@@ -91,3 +91,7 @@ const ghost = {
 
 export default Object.freeze(ghost);
 
+
+// todo, only see through nearby walls, not see the whole map
+// todo apply a cd on phasing to avoid flickering it for vision
+// todo draw effect radius for fear
