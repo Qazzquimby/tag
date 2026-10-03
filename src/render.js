@@ -1,7 +1,7 @@
 import { MAP_CELL, Status } from "./config.js";
 import { isSolid } from "./map.js";
 import { canSee, visionOrigins, visibilityPolygon } from "./vision.js";
-import { bodies } from "./bodies.js";
+import { bodies } from "./collision.js";
 import { ENTITY_DEFS } from "./entities/index.js";
 import { CLASS_DEFS } from "./classes/index.js";
 

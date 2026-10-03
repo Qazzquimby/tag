@@ -11,7 +11,6 @@ import {
   REMOTE_SNAP_DIST,
   Status,
 } from "./config.js";
-import deathSound from "./assets/sfx/death.mp3";
 
 export function createPlayer({
   id,

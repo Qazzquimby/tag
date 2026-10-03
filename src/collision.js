@@ -1,8 +1,13 @@
 import { EntityKind, WALL_BOUNCE } from "./config.js";
 import { isAreaFree, isSolid } from "./map.js";
-import { bodies } from "./bodies.js";
 
 const EPSILON = 1e-6;
+
+export function* bodies(game) {
+  yield* game.entities.values();
+  yield* game.players.values();
+}
+
 
 function cellRange(min, max, cell) {
   return [

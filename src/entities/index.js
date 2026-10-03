@@ -1,6 +1,6 @@
 import { EntityKind, REMOTE_SNAP_DIST, Status } from "../config.js";
 import { moveWithCollision } from "../collision.js";
-import { bodies } from "../bodies.js";
+import { bodies } from "../collision.js";
 import { smoothRemote } from "../player.js";
 import { FOOD_DEF } from "./food.js";
 import { PLAYER_DEF } from "./player-entity.js";
