@@ -70,7 +70,7 @@ function fly(ctx, moveDefault) {
   }
 
   if (contactNormal) {
-    attach(self, state, contactNormal, state.hint ?? entryVelocity);
+    attach(self, state, contactNormal, state.hint);
   }
 }
 
@@ -141,7 +141,7 @@ const wallRunner = {
   primary: {
     label: "Leap",
     cooldown: 0.4,
-    use({ self, controls, game }) {
+    use({ self, game }) {
       const state = self.classState;
       if (state.attached) {
         state.attached = false;
@@ -171,19 +171,16 @@ const wallRunner = {
 
       if (!nearestDirection) return false;
 
+      state.hint = { x: self.vx, y: self.vy };
       self.vx = nearestDirection.x * JUMP_SPEED;
       self.vy = nearestDirection.y * JUMP_SPEED;
       state.seeking = true;
-      state.hint = {
-        x: controls.aim.x - self.x,
-        y: controls.aim.y - self.y,
-      };
     },
   },
   secondary: {
     label: "Launch",
     cooldown: 0.4,
-    use({ self, controls }) {
+    use({ self }) {
       const state = self.classState;
       if (!state.attached) return false;
 
@@ -207,7 +204,7 @@ const wallRunner = {
 
       state.attached = false;
       state.seeking = true;
-      state.hint = null;
+      state.hint = { x: self.vx, y: self.vy };
       self.vx += state.normal.x * JUMP_SPEED;
       self.vy += state.normal.y * JUMP_SPEED;
     },
