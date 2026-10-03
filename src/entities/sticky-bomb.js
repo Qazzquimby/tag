@@ -8,6 +8,8 @@ const BOMB_RADIUS = 6;
 const STICKY_BOMB_SPRITE = "🧨";
 const STICKY_BOMB_FONT_SIZE = 16;
 
+export const STICKY_BOMB_FRICTION = 15;
+
 export function createStickyBomb(owner, id, vx, vy) {
   return createEntity({
     id,
@@ -17,10 +19,11 @@ export function createStickyBomb(owner, id, vx, vy) {
     vx,
     vy,
     radius: BOMB_RADIUS,
-    collides: true,
-    solid: false,
+    friction: STICKY_BOMB_FRICTION,
+    collides: true, // make default
+    solid: false, // make a default
     interactive: false,
-    grantsVision: false,
+    grantsVision: false, // make a default
     ownerId: owner.id,
     armLeft: ARM_S,
   });

@@ -56,19 +56,19 @@ export function createSfx() {
     return buffers.get(url);
   }
 
-  async function play(url, origin, listener) {
+  async function play(url, origin, listener, { volume = 1 } = {}) {
     const context = getAudioContext();
     const buffer = await loadBuffer(url);
     await context.resume();
 
-    const { volume, pan } = spatialMix(origin, listener);
+    const mix = spatialMix(origin, listener);
     const source = context.createBufferSource();
     const gain = context.createGain();
     const panner = context.createStereoPanner();
 
     source.buffer = buffer;
-    gain.gain.value = volume;
-    panner.pan.value = pan;
+    gain.gain.value = mix.volume * volume;
+    panner.pan.value = mix.pan;
 
     source.connect(gain);
     gain.connect(panner);
@@ -79,7 +79,7 @@ export function createSfx() {
   async function playAbility(event, listener) {
     const ability = CLASS_DEFS[event.classId][event.slot];
     if (!ability?.sound) return;
-    await play(ability.sound, event, listener);
+    await play(ability.sound, event, listener, { volume: ability.volume });
   }
 
   return { playAbility, play };
