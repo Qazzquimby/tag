@@ -1,6 +1,8 @@
 import { EntityKind, ENTITY_FRICTION, NetEvent, Shape, Status } from "../config.js";
 import { createStickyBomb } from "../entities/sticky-bomb.js";
 import { applyKnockback } from "../player.js";
+import stickyDetonateSound from "../assets/sfx/demoman/sticky_detonate.mp3";
+import stickyLaunchSound from "../assets/sfx/demoman/sticky_launch.mp3";
 
 const THROW_COOLDOWN = 1;
 const DETONATE_COOLDOWN = 0.5;
@@ -54,6 +56,7 @@ const demoman = {
   friction: 4,
   primary: {
     label: "Sticky",
+    sound: stickyLaunchSound,
     cooldown: THROW_COOLDOWN,
     use({ self, controls, game }) {
       const dx = controls.aim.x - self.x;
@@ -74,6 +77,7 @@ const demoman = {
   },
   secondary: {
     label: "Detonate",
+    sound: stickyDetonateSound,
     cooldown: DETONATE_COOLDOWN,
     use({ self, game, net }) {
       const bombs = armedBombs(self, game);

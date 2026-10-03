@@ -5,6 +5,8 @@ import { createEntity } from "./entity.js";
 
 const ARM_S = 0.5;
 const BOMB_RADIUS = 6;
+const STICKY_BOMB_SPRITE = "🧨";
+const STICKY_BOMB_FONT_SIZE = 16;
 
 export function createStickyBomb(owner, id, vx, vy) {
   return createEntity({
@@ -38,16 +40,20 @@ export const STICKY_BOMB_DEF = Object.freeze({
   },
   draw(ctx, entity, viewer, now, game) {
     const owner = game.players.get(entity.ownerId);
+    const color = RELATION_COLORS[relationTo(viewer, owner)];
+
+    ctx.save();
     ctx.globalAlpha = entity.armLeft > 0 ? 0.5 : 1;
     ctx.beginPath();
     ctx.arc(entity.x, entity.y, entity.radius, 0, Math.PI * 2);
-    ctx.fillStyle = RELATION_COLORS[relationTo(viewer, owner)];
-    ctx.fill();
-    if (entity.armLeft <= 0) {
-      ctx.strokeStyle = "#fff";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.font = `${STICKY_BOMB_FONT_SIZE}px sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(STICKY_BOMB_SPRITE, entity.x, entity.y);
+    ctx.restore();
   },
 });

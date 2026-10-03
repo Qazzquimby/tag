@@ -3,13 +3,13 @@ import { MAP_CELL } from "./config.js";
 const EPSILON = 1e-6;
 
 // Tuning
-const CELLS_PER_PLAYER = 65;   // roughly matches your old 18x12 map at 2-3 players
+const CELLS_PER_PLAYER = 65;
 const MIN_CELLS = 150;
 const ASPECT = 1.5;            // width : height
-const CHUNK = 4;               // chunk size in cells (only used to spread obstacles out)
+const CHUNK = 6;               // chunk size in cells (only used to spread obstacles out)
 const GAP = 1;                 // min free cells between any two obstacles / the border
 
-// Obstacle shapes as [col, row] cells. None contain holes, so they can't enclose space.
+// Obstacle shapes as [col, row] cells. Must not contain holes
 const SHAPES = [
   [[0, 0], [1, 0], [2, 0], [3, 0]],                           // bar 4
   [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0]],           // bar 6

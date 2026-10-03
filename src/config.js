@@ -99,7 +99,7 @@ export const DEAD_S = 6;
 export const SPAWN_WARNING_S = 1.5;
 export const FOOD_WARNING_S = 1.5;
 
-export const ROUND_S = 120;
+export const ROUND_S = 90;
 export const ROUND_RESULT_S = 5;
 
 export const FOOD_INTERVAL_S = 3;
