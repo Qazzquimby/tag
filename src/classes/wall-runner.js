@@ -2,11 +2,11 @@ import { Shape } from "../config.js";
 import { lastFreePointAlong, moveWithCollision } from "../collision.js";
 import { isAreaFree } from "../map.js";
 
-const RUN_SPEED = 500;
-const JUMP_SPEED = 1040;
-const STICK_SPEED = 80;
+const RUN_SPEED = 400;
+const JUMP_SPEED = 800;
+const STICK_SPEED = 20;
 const WALL_PROBE = 2;
-const JUMP_RANGE = 260;
+const JUMP_RANGE = 20;
 const SEEK_MIN_SPEED = 120;
 const BLOCKED_TOLERANCE = 1e-3;
 
@@ -187,29 +187,29 @@ const wallRunner = {
       const state = self.classState;
       if (!state.attached) return false;
 
-      const dx = controls.aim.x - self.x;
-      const dy = controls.aim.y - self.y;
-      const distance = Math.hypot(dx, dy);
-      if (distance === 0) return false;
-
-      let direction = { x: dx / distance, y: dy / distance };
-      if (dot(direction, state.normal) < 0) {
-        direction = {
-          x: direction.x - state.normal.x * dot(direction, state.normal),
-          y: direction.y - state.normal.y * dot(direction, state.normal),
-        };
-        const tangentLength = Math.hypot(direction.x, direction.y);
-        direction =
-          tangentLength === 0
-            ? state.normal
-            : { x: direction.x / tangentLength, y: direction.y / tangentLength };
-      }
+      // const dx = controls.aim.x - self.x;
+      // const dy = controls.aim.y - self.y;
+      // const distance = Math.hypot(dx, dy);
+      // if (distance === 0) return false;
+      //
+      // let direction = { x: dx / distance, y: dy / distance };
+      // if (dot(direction, state.normal) < 0) {
+      //   direction = {
+      //     x: direction.x - state.normal.x * dot(direction, state.normal),
+      //     y: direction.y - state.normal.y * dot(direction, state.normal),
+      //   };
+      //   const tangentLength = Math.hypot(direction.x, direction.y);
+      //   direction =
+      //     tangentLength === 0
+      //       ? state.normal
+      //       : { x: direction.x / tangentLength, y: direction.y / tangentLength };
+      // }
 
       state.attached = false;
       state.seeking = true;
       state.hint = null;
-      self.vx = direction.x * JUMP_SPEED;
-      self.vy = direction.y * JUMP_SPEED;
+      self.vx += state.normal.x * JUMP_SPEED;
+      self.vy += state.normal.y * JUMP_SPEED;
     },
   },
 };
