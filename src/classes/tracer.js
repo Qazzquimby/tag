@@ -5,9 +5,9 @@ import blinkSound from "../assets/sfx/tracer/blink.mp3";
 import recallSound from "../assets/sfx/tracer/recall.mp3";
 
 const BLINK_DISTANCE = 130;
-const BLINK_COOLDOWN = 3;
-const RECALL_S = 3;
-const RECALL_COOLDOWN = 8;
+const BLINK_COOLDOWN = 3.5;
+const RECALL_S = 2.5;
+const RECALL_COOLDOWN = 12;
 
 const tracer = {
   name: "Tracer",
@@ -15,7 +15,7 @@ const tracer = {
   symbol: "⏱️",
   radius: 12,
   accel: 9999999,
-  maxSpeed: 200,
+  maxSpeed: 190,
   friction: 8,
   createState() {
     return { elapsed: 0, history: [] };

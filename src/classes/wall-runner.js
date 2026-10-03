@@ -2,7 +2,7 @@ import { Shape } from "../config.js";
 import { lastFreePointAlong, moveWithCollision } from "../collision.js";
 import { isAreaFree } from "../map.js";
 
-const RUN_SPEED = 400;
+const RUN_SPEED = 350;
 const JUMP_SPEED = 800;
 const STICK_SPEED = 20;
 const WALL_PROBE = 2;
@@ -110,9 +110,9 @@ const wallRunner = {
   shape: Shape.CIRCLE,
   symbol: "🧗",
   radius: 11,
-  accel: 1200,
-  maxSpeed: 270,
-  friction: 4,
+  accel: 1600,
+  maxSpeed: 260,
+  friction: 3,
   createState() {
     return {
       attached: false,
