@@ -25,7 +25,7 @@ export function drawShape(ctx, player, def, color, isSelf) {
 }
 
 export function drawSymbol(ctx, player, def) {
-  ctx.font = `${Math.round(def.radius * 1.3)}px system-ui`;
+  ctx.font = `${Math.round(def.radius * 1.5)}px system-ui`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(def.symbol, player.x, player.y);
