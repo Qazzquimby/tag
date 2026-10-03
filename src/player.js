@@ -88,7 +88,7 @@ function updateSpawning(player, dt) {
   }
 }
 
-function applyMovement(ctx) {
+function moveDefault(ctx) {
   const { self, controls, dt, game } = ctx;
   const def = CLASS_DEFS[self.classId];
   const boost = self.boostLeft > 0 ? BOOST_MULT : 1;
@@ -120,10 +120,19 @@ function applyMovement(ctx) {
   moveWithCollision(self, self.radius, dt, game.world.map);
 }
 
+function applyMovement(ctx) {
+  const def = CLASS_DEFS[ctx.self.classId];
+  if (def.move) {
+    def.move(ctx, moveDefault);
+    return;
+  }
+  moveDefault(ctx);
+}
+
 function useAbility(player, ctx, def, slot, pressed) {
   const ability = def[slot];
   if (!pressed || !ability || player.cooldowns[slot] > 0) return;
-  ability.use(ctx);
+  if (ability.use(ctx) === false) return;
   player.cooldowns[slot] = ability.cooldown;
 }
 

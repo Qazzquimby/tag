@@ -16,11 +16,7 @@ Add sfx on placing and detonating sticky bombs. Give sticky bombs an emoji sprit
 
 Add an optional `ClassDef.meter(player)` on abilities for charge bars.
 
-3. **Impulses and status effects** (stun, pull, push, fear, slow): Monkey peel, Bomber, Demoman, Ghost, Frog, Spider.
-   - Add `player.effects`, an `applyImpulse` helper, and a targeted `NetEvent.EFFECT` handled like `handleCatch`.
-   - Files: `player.js`, `game.js`, `config.js`, `main.js`.
-
-4. **Movement override** (`move(ctx)` hook that replaces default integration): Snake (grid movement), Prince (wall-sticking), Monkey blast, Frog lunges.
+4. **Movement override** (`move(ctx)` hook that replaces default integration): Snake (grid movement), Wall running, Monkey blast, Frog lunges.
    - Files: `player.js`, `collision.js`, and the class file.
 
 5. **Tile layer** (replace `solid` with a tile-type enum, an immutable-edge flag and per-tile effects): Engineer, Skater ice trail, Ghost and Spider wall-passing, and the "edges can't be changed" rule.
@@ -61,7 +57,24 @@ Edges of the map can't be changed the way inner walls can.
 
 
 Classes:
-    
+
+# Wall Runner
+
+Left click jumps to a nearby wall, sticks to it, and moves in the direction most aligned with the mouse cursor when you clicked.
+Automatically turns along concave turns (inside corners) but flies off preserving momentum for convex turns.
+Left click while already on the wall detaches, preserving momentum
+
+Right click jumps off of the wall towards the cursor. If you touch another wall you immediately attach to it and move in the direction most in line with your current momentum.
+
+# Monster
+
+Can see the highest score player even without LoS.
+All players leave trails lasting 2s
+Move faster while on a trail
+Left click does a lunge, which refreshes when you eat anything
+Right click makes an illusion of you at the cursor location for 3s, with impulse moving toward you, giving you vision. 8s cd
+
+
 # Monkey
 
 left click, throw banana peel toward cursor with strength proportional to distance to cursor with some maximum.
@@ -88,19 +101,6 @@ Bomb collides with players and is pushed with them, and has its own momentum.
 Cooldown 4 seconds
 
 Right click knock nearby entities away. Pushes bombs much farther. 2s cd.
-
-# Demoman
-
-left click shoots a sticky bomb (physics same as banana peel). Cd 2s. Arms after 0.5s.
-right click detonates all armed sticky bombs, pushing entities away from them. Closer to center gives more knockback. Knockback stacks from multiple sticky bombs.
-
-# Prince
-
-Sticks to walls and moves faster along them. Automatically turns along concave turns (inside corners) but flies off for convex turns.
-
-Left click jumps away from the current wall, while preserving momentum.
-Right click rewinds location while held. Has a maximum charge of 1s. Regains the charge at 1s/3s.
-
 
 # Ghost
 Passively gets increasingly transparent to more distant players
@@ -156,3 +156,9 @@ driving controls, w is forwards, left and right steer.
 Forwards is determined by car facing, not mouse
 left click beeps horn as long as its held
 right mouse button changes physics for drifting.
+
+
+
+
+----
+Right click rewinds location while held. Has a maximum charge of 1s. Regains the charge at 1s/3s.

@@ -29,7 +29,7 @@
 /**
  * @typedef {Object} Ability
  * @property {number} cooldown
- * @property {(ctx: ClassContext) => void} use
+ * @property {(ctx: ClassContext) => (void|false)} use
  * @property {string} [label]
  * @property {string} [sound] URL of an mp3 asset
  */
@@ -46,6 +46,7 @@
  * @property {() => Object} [createState]
  * @property {(ctx: ClassContext) => void} [update]
  * @property {(ctx: ClassContext, intent: MovementIntent) => void} [adjustIntent]
+ * @property {(ctx: ClassContext, moveDefault: (ctx: ClassContext) => void) => void} [move] Replaces default movement integration.
  * @property {Ability} [primary]
  * @property {Ability} [secondary]
  */

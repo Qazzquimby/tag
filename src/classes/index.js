@@ -4,6 +4,7 @@ import tank from "./tank.js";
 import tracer from "./tracer.js";
 import clone from "./clone.js";
 import demoman from "./demoman.js";
+import wallRunner from "./wall-runner.js";
 
 export const PlayerClass = Object.freeze({
   BALANCED: 0,
@@ -12,6 +13,7 @@ export const PlayerClass = Object.freeze({
   TRACER: 3,
   CLONE: 4,
   DEMOMAN: 5,
+  WALL_RUNNER: 6,
 });
 
 export const CLASS_DEFS = Object.freeze({
@@ -21,4 +23,5 @@ export const CLASS_DEFS = Object.freeze({
   [PlayerClass.TRACER]: tracer,
   [PlayerClass.CLONE]: clone,
   [PlayerClass.DEMOMAN]: demoman,
+  [PlayerClass.WALL_RUNNER]: wallRunner,
 });
