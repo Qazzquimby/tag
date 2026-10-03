@@ -13,7 +13,7 @@ const tracer = {
   name: "Tracer",
   shape: Shape.CIRCLE,
   symbol: "⏱️",
-  radius: 12,
+  radius: 10,
   accel: 9999999,
   maxSpeed: 190,
   friction: 8,
