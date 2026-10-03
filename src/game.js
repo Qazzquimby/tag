@@ -48,6 +48,11 @@ const NO_CONTROLS = {
   secondaryPressed: false,
 };
 
+function currentRoundStartedAt() {
+  const roundMs = ROUND_S * 1000;
+  return Math.floor(Date.now() / roundMs) * roundMs;
+}
+
 function regenerateMap(game) {
   game.world.map = createMap(
     game.world.W,
@@ -71,7 +76,7 @@ export function createGame(localId, world, name, sfx) {
     foodTimer: FOOD_INTERVAL_S,
     lastSent: 0,
     nextEntityId: 1,
-    roundStartedAt: Date.now(),
+    roundStartedAt: currentRoundStartedAt(),
     roundResult: null,
     lastActiveAt: performance.now(),
     leaving: false,
@@ -289,10 +294,6 @@ export function handleFoodEaten(game, payload) {
 }
 
 export function handleFoodSync(game, payload) {
-  if (game.roundStartedAt !== payload.roundStartedAt) {
-    game.roundStartedAt = payload.roundStartedAt;
-    regenerateMap(game);
-  }
   for (const food of payload.foods) {
     if (game.entities.has(food.id)) continue;
     game.entities.set(food.id, createFood(food.id, food.x, food.y, 0));
@@ -304,7 +305,6 @@ export function handleHello(game, net) {
   if (!isHost(game)) return;
 
   net.send(NetEvent.FOOD_SYNC, {
-    roundStartedAt: game.roundStartedAt,
     foods: [...game.entities.values()]
       .filter((entity) => entity.kind === EntityKind.FOOD)
       .map((food) => ({ id: food.id, x: food.x, y: food.y })),
