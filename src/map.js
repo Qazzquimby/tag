@@ -3,11 +3,11 @@ import { MAP_CELL } from "./config.js";
 const EPSILON = 1e-6;
 
 // Tuning
-const CELLS_PER_PLAYER = 85;   // roughly matches your old 18x12 map at 2-3 players
-const MIN_CELLS = 200;
+const CELLS_PER_PLAYER = 65;   // roughly matches your old 18x12 map at 2-3 players
+const MIN_CELLS = 150;
 const ASPECT = 1.5;            // width : height
-const CHUNK = 6;               // chunk size in cells (only used to spread obstacles out)
-const GAP = 2;                 // min free cells between any two obstacles / the border
+const CHUNK = 4;               // chunk size in cells (only used to spread obstacles out)
+const GAP = 1;                 // min free cells between any two obstacles / the border
 
 // Obstacle shapes as [col, row] cells. None contain holes, so they can't enclose space.
 const SHAPES = [
@@ -22,6 +22,17 @@ const SHAPES = [
   [[0, 0], [1, 0], [1, 1], [2, 1], [2, 2]],                   // zigzag
   [[1, 0], [0, 1], [1, 1], [2, 1], [1, 2]],                   // plus
 ];
+
+export function mulberry32(seed) {
+  let state = seed;
+  return function () {
+    state |= 0;
+    state = (state + 0x6D2B79F5) | 0;
+    let value = Math.imul(state ^ (state >>> 15), 1 | state);
+    value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+}
 
 /** World size in pixels for a given player count. */
 export function getWorldSize(playerCount) {
@@ -125,9 +136,9 @@ export function createMap(W, H, rng = Math.random) {
   shuffle(chunks, rng);
 
   for (const [cx, cy] of chunks) {
-    const wanted = rng() < 0.25 ? 2 : 1; // some chunks get 2 obstacles, rest 1
+    const wanted = rng() < 0.5 ? 3 : 2; // most chunks get 2 obstacles, some 3
     let placed = 0;
-    for (let attempt = 0; attempt < 12 && placed < wanted; attempt++) {
+    for (let attempt = 0; attempt < 20 && placed < wanted; attempt++) {
       const shape = SHAPES[Math.floor(rng() * SHAPES.length)];
       const cells = transform(shape, Math.floor(rng() * 4), rng() < 0.5);
       const ox = cx - 1 + Math.floor(rng() * (CHUNK + 2));

@@ -35,6 +35,7 @@ import { compareRank } from "./ranking.js";
 import {popClone} from "./classes/clone.js";
 import deathSound from "./assets/sfx/death.mp3";
 import { leaveRoom } from "./net.js";
+import { createMap, isAreaFree, mulberry32 } from "./map.js";
 
 export const DUMMY_ID = "dummy";
 
@@ -46,6 +47,19 @@ const NO_CONTROLS = {
   primaryPressed: false,
   secondaryPressed: false,
 };
+
+function regenerateMap(game) {
+  game.world.map = createMap(
+    game.world.W,
+    game.world.H,
+    mulberry32(game.roundStartedAt),
+  );
+  for (const [id, entity] of game.entities) {
+    if (!isAreaFree(game.world.map, entity.x, entity.y, entity.radius)) {
+      game.entities.delete(id);
+    }
+  }
+}
 
 export function createGame(localId, world, name, sfx) {
   const game = {
@@ -62,6 +76,8 @@ export function createGame(localId, world, name, sfx) {
     lastActiveAt: performance.now(),
     leaving: false,
   };
+
+  regenerateMap(game);
 
   const spawn = pickSpawn(game.players, localId, world);
   game.players.set(
@@ -114,6 +130,7 @@ function updateRound(game) {
     until: performance.now() + ROUND_RESULT_S * 1000,
   };
   game.roundStartedAt += Math.floor(elapsed / roundMs) * roundMs;
+  regenerateMap(game);
 
   for (const player of [game.players.get(game.localId), game.players.get(DUMMY_ID)]) {
     if (player && player.status !== Status.CHOOSING) {
@@ -272,7 +289,10 @@ export function handleFoodEaten(game, payload) {
 }
 
 export function handleFoodSync(game, payload) {
-  game.roundStartedAt = payload.roundStartedAt;
+  if (game.roundStartedAt !== payload.roundStartedAt) {
+    game.roundStartedAt = payload.roundStartedAt;
+    regenerateMap(game);
+  }
   for (const food of payload.foods) {
     if (game.entities.has(food.id)) continue;
     game.entities.set(food.id, createFood(food.id, food.x, food.y, 0));
