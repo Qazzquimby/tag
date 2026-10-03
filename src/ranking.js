@@ -12,3 +12,12 @@ export function relationTo(viewer, other) {
   if (viewer.id === other.id) return Relation.SELF;
   return compareRank(other, viewer) < 0 ? Relation.ABOVE : Relation.BELOW;
 }
+
+export function topRankedPlayer(players) {
+  return [...players.values()].sort(compareRank)[0] ?? null;
+}
+
+export function displayRelation(viewer, other) {
+  if (viewer.id !== other.id && other.classNet?.disguised) return Relation.BELOW;
+  return relationTo(viewer, other);
+}

@@ -8,7 +8,7 @@ import {
 } from "../config.js";
 import { CLASS_DEFS } from "../classes/index.js";
 import { addScore, kill } from "../player.js";
-import { relationTo } from "../ranking.js";
+import { displayRelation, relationTo } from "../ranking.js";
 import { canSee } from "../vision.js";
 import { drawShape, drawSymbol, drawLabel } from "../render-shapes.js";
 import eatSound from "../assets/sfx/eat_food.mp3";
@@ -49,17 +49,19 @@ export const PLAYER_DEF = Object.freeze({
     if (player.status === Status.DEAD) return;
 
     const def = CLASS_DEFS[player.classId];
-    const color = RELATION_COLORS[relationTo(viewer, player)];
+    const color = RELATION_COLORS[displayRelation(viewer, player)];
 
     if (player.status === Status.SPAWNING) {
       drawSpawnWarning(ctx, player, def, color, now);
       return;
     }
 
+    ctx.globalAlpha = def.viewAlpha?.(player, viewer) ?? 1;
     drawShape(ctx, player, def, color, player.id === viewer.id);
     drawSymbol(ctx, player, def);
     drawAimArrow(ctx, player, def, color);
     drawLabel(ctx, player, def);
+    ctx.globalAlpha = 1;
   },
   onTouch(other, catcher, game, net) {
     if (relationTo(catcher, other) !== Relation.ABOVE) return;

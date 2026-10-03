@@ -1,4 +1,5 @@
 import { VISION_RAYS } from "./config.js";
+import { CLASS_DEFS } from "./classes/index.js";
 import { isSolid } from "./map.js";
 
 export function castRay(map, x, y, dx, dy, maxDist) {
@@ -48,6 +49,9 @@ export function visionOrigins(game, viewer) {
 }
 
 export function canSee(game, viewer, target) {
+  const def = CLASS_DEFS[viewer.classId];
+  if (def.seesThroughWalls?.(viewer)) return true;
+  if (def.senses?.(viewer, target, game)) return true;
   return visionOrigins(game, viewer).some((origin) =>
     hasLineOfSight(game.world.map, origin, target),
   );

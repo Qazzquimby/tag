@@ -46,5 +46,3 @@ export const RECALL_MARKER_DEF = Object.freeze({
     ctx.globalAlpha = 1;
   },
 });
-
-// todo, renders as series of small teleports instead of smooth movement

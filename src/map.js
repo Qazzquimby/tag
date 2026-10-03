@@ -184,6 +184,40 @@ export function isAreaFree(map, x, y, half) {
     return true;
 }
 
+export const TRAIL_S = 2;
+
+export function recordTrails(trails, game, now) {
+    const {cell, cols} = game.world.map;
+    for (const player of game.players.values()) {
+        if (player.status !== 0 || player.id === game.localId) continue;
+        const col = Math.floor(player.x / cell);
+        const row = Math.floor(player.y / cell);
+        if (col >= 0 && row >= 0 && col < game.world.map.cols && row < game.world.map.rows) {
+            trails.set(row * cols + col, now);
+        }
+    }
+    for (const [index, at] of trails) {
+        if (now - at > TRAIL_S * 1000) trails.delete(index);
+    }
+}
+
+export function trailStrength(trails, map, x, y, now) {
+    const col = Math.floor(x / map.cell);
+    const row = Math.floor(y / map.cell);
+    if (col < 0 || row < 0 || col >= map.cols || row >= map.rows) return 0;
+    const at = trails.get(row * map.cols + col);
+    return at === undefined ? 0 : Math.max(0, 1 - (now - at) / (TRAIL_S * 1000));
+}
+
+export function* trailTiles(trails, map, now) {
+    for (const [index, at] of trails) {
+        const strength = Math.max(0, 1 - (now - at) / (TRAIL_S * 1000));
+        if (strength > 0) {
+            yield {col: index % map.cols, row: Math.floor(index / map.cols), strength};
+        }
+    }
+}
+
 export function randomFreePosition(world, clearance) {
     const {W, H, map} = world;
 

@@ -35,17 +35,13 @@ Add an optional `ClassDef.meter(player)` on abilities for charge bars.
 
 | Class | Needs |
 |---|---|
-| Bomber | Entities (2), effects (3) |
-| Magnet | Entities (2), effects (3) |
 | Skater | Reverse-momentum primary now; ice trail needs tiles (5) |
-| Prince | Movement override (4), tiles (5), position history like Tracer |
 | Snake | Movement override (4), body-segment entities (2), score/catch rule changes in `game.js` |
 | Ghost | Visibility (6), effects (3), wall-phasing (5) |
 | Monkey | Entities (2), effects (3), movement override (4) |
 | Spider | Entities (2), tiles (5), effects (3) |
 | Frog | Entities (2), movement override (4) |
 | Engineer | Entities (2), tiles (5) |
-
 
 
 ---
@@ -58,21 +54,25 @@ Edges of the map can't be changed the way inner walls can.
 
 Classes:
 
-# Wall Runner
-
-Left click jumps to a nearby wall, sticks to it, and moves in the direction most aligned with the mouse cursor when you clicked.
-Automatically turns along concave turns (inside corners) but flies off preserving momentum for convex turns.
-Left click while already on the wall detaches, preserving momentum
-
-Right click jumps off of the wall towards the cursor. If you touch another wall you immediately attach to it and move in the direction most in line with your current momentum.
-
 # Monster
 
 Can see the highest score player even without LoS.
 All players leave trails lasting 2s
 Move faster while on a trail
 Left click does a lunge, which refreshes when you eat anything
-Right click makes an illusion of you at the cursor location for 3s, with impulse moving toward you, giving you vision. 8s cd
+Right click makes an illusion of you at the cursor location for 3s, with impulse toward the nearest prey player, giving you vision. 8s cd. Makes the same 'lunge' sfx
+
+# Ghost
+Passively gets increasingly transparent to more distant players
+
+Left click
+For 3s appear to be predator to all players.
+Prey players in close range are 'feared', lose momentum, and move directly away from ghost for 2s.
+cooldown 8s
+
+Right click, while held move slower, become increasingly transparent, can see through and move through walls.
+Max charge of 5s, recharge at 2s/1s.
+
 
 
 # Monkey
@@ -102,16 +102,6 @@ Cooldown 4 seconds
 
 Right click knock nearby entities away. Pushes bombs much farther. 2s cd.
 
-# Ghost
-Passively gets increasingly transparent to more distant players
-
-Left click
-For 3s appear to be predator to all players.
-Prey players in close range are 'feared', lose momentum, and move directly away from ghost for 2s.
-cooldown 8s
-
-Right click, while held move slower, become increasingly transparent, can see through and move through walls.
-Max charge of 5s, recharge at 2s/1s.
 
 
 # Skater

@@ -7,6 +7,7 @@ import { PLAYER_DEF } from "./player-entity.js";
 import { RECALL_MARKER_DEF } from "./recall-marker.js";
 import { CLONE_DEF } from "./clone.js";
 import { STICKY_BOMB_DEF } from "./sticky-bomb.js";
+import {ILLUSION_DEF} from "./monster-illusion.js";
 
 export const ENTITY_DEFS = Object.freeze({
   [EntityKind.PLAYER]: PLAYER_DEF,
@@ -14,6 +15,7 @@ export const ENTITY_DEFS = Object.freeze({
   [EntityKind.RECALL_MARKER]: RECALL_MARKER_DEF,
   [EntityKind.CLONE]: CLONE_DEF,
   [EntityKind.STICKY_BOMB]: STICKY_BOMB_DEF,
+  [EntityKind.ILLUSION]: ILLUSION_DEF,
 });
 
 export function replicatedStates(game, ownerId) {

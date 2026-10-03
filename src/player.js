@@ -48,6 +48,10 @@ export function createPlayer({
     lastSeen: performance.now(),
     isDummy,
     classState: null,
+    classNet: {},
+    fearLeft: 0,
+    fearX: 0,
+    fearY: 0,
     cooldowns: { primary: 0, secondary: 0 },
   };
   return player;
@@ -59,6 +63,7 @@ export function setPlayerClass(player, classId) {
 }
 
 export function respawn(player, players, world) {
+  clearTransient(player);
   const spawn = pickSpawn(players, player.id, world);
   player.x = spawn.x;
   player.y = spawn.y;
@@ -78,6 +83,7 @@ function resetAbilities(player) {
   const def = CLASS_DEFS[player.classId];
   player.cooldowns = { primary: 0, secondary: 0 };
   player.classState = def.createState ? def.createState() : null;
+  refreshClassNet(player);
 }
 
 function updateSpawning(player, dt) {
@@ -98,6 +104,7 @@ function moveDefault(ctx) {
     accel: def.accel,
     friction: def.friction,
     maxSpeed: def.maxSpeed,
+    phase: false,
   };
   def.adjustIntent?.(ctx, intent);
 
@@ -117,7 +124,12 @@ function moveDefault(ctx) {
     self.vy = (self.vy / speed) * maxSpeed;
   }
 
-  moveWithCollision(self, self.radius, dt, game.world.map);
+  if (intent.phase) {
+    self.x = Math.max(self.radius, Math.min(game.world.W - self.radius, self.x + self.vx * dt));
+    self.y = Math.max(self.radius, Math.min(game.world.H - self.radius, self.y + self.vy * dt));
+  } else {
+    moveWithCollision(self, self.radius, dt, game.world.map);
+  }
 }
 
 function applyMovement(ctx) {
@@ -134,6 +146,23 @@ function useAbility(player, ctx, def, slot, pressed) {
   if (!pressed || !ability || player.cooldowns[slot] > 0) return;
   if (ability.use(ctx) === false) return;
   player.cooldowns[slot] = ability.cooldown;
+}
+
+export function applyFear(player, fromX, fromY, duration) {
+  player.fearLeft = duration;
+  player.fearX = fromX;
+  player.fearY = fromY;
+  player.vx = 0;
+  player.vy = 0;
+}
+
+function effectiveControls(player, controls) {
+  let result = controls;
+  if (player.fearLeft > 0) {
+    const angle = Math.atan2(player.y - player.fearY, player.x - player.fearX);
+    result = {...result, move: {x: Math.cos(angle), y: Math.sin(angle)}};
+  }
+  return player.stunLeft > 0 ? withoutInput(result) : result;
 }
 
 function withoutInput(controls) {
@@ -163,7 +192,9 @@ export function updateOwned(player, controls, dt, game, net) {
     return;
   }
 
-  const activeControls = player.stunLeft > 0 ? withoutInput(controls) : controls;
+  player.fearLeft = Math.max(0, player.fearLeft - dt);
+  player.fearLeft = Math.max(0, player.fearLeft - dt);
+  const activeControls = effectiveControls(player, controls);
   player.aim = Math.atan2(activeControls.aim.y - player.y, activeControls.aim.x - player.x);
   const ctx = { self: player, controls: activeControls, dt, game, net };
   const def = CLASS_DEFS[player.classId];
@@ -171,9 +202,20 @@ export function updateOwned(player, controls, dt, game, net) {
   useAbility(player, ctx, def, "primary", controls.primaryPressed);
   useAbility(player, ctx, def, "secondary", controls.secondaryPressed);
   applyMovement(ctx);
+  refreshClassNet(player);
+}
+
+function refreshClassNet(player) {
+  player.classNet = CLASS_DEFS[player.classId].netState?.(player) ?? {};
+}
+
+function clearTransient(player) {
+  player.classNet = {};
+  player.fearLeft = 0;
 }
 
 export function kill(player) {
+  clearTransient(player);
   player.status = Status.DEAD;
   player.stateTimer = DEAD_S;
   player.vx = 0;
@@ -199,6 +241,7 @@ export function startRound(player, players, world) {
 export function addScore(player, points) {
   player.score += points;
   player.scoredAt = Date.now();
+  CLASS_DEFS[player.classId].onScore?.(player);
 }
 
 export function pickSpawn(players, selfId, world) {
@@ -244,6 +287,7 @@ export function toStatePayload(player) {
     aim: player.aim,
     score: player.score,
     scoredAt: player.scoredAt,
+    classNet: player.classNet,
   };
 }
 
@@ -258,6 +302,7 @@ export function applyStatePayload(player, payload) {
   player.aim = payload.aim;
   player.score = payload.score;
   player.scoredAt = payload.scoredAt;
+  player.classNet = payload.classNet;
   player.tx = payload.x;
   player.ty = payload.y;
   player.lastSeen = performance.now();

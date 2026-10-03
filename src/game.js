@@ -10,6 +10,8 @@ import {
   Status,
 } from "./config.js";
 import { PlayerClass } from "./classes/index.js";
+import { applyFear } from "./player.js";
+import { recordTrails } from "./map.js";
 import { createFood, randomFoodPosition } from "./entities/food.js";
 import {
   replicatedStates,
@@ -80,6 +82,7 @@ export function createGame(localId, world, name, sfx) {
     roundResult: null,
     lastActiveAt: performance.now(),
     leaving: false,
+    trails: new Map(), // todo, seems not sufficiently generalizable
   };
 
   regenerateMap(game);
@@ -175,6 +178,9 @@ export function updateGame(game, input, dt, net) {
     if (now - player.lastSeen > STALE_S * 1000) game.players.delete(id);
   }
 
+  if (me.status === Status.ALIVE && me.classId === PlayerClass.MONSTER) {
+    recordTrails(game.trails, game, now);
+  }
   updateEntities(game, dt);
   resolveBodyCollisions(game);
 
@@ -262,6 +268,13 @@ export function handleClonePopped(game, payload) {
   const entity = game.entities.get(payload.id);
   if (!entity) return;
   popClone(game, entity);
+}
+
+export function handleFear(game, payload) {
+  if (payload.victim !== game.localId) return;
+  const player = game.players.get(game.localId);
+  if (!player || player.status !== Status.ALIVE) return;
+  applyFear(player, payload.x, payload.y, payload.duration);
 }
 
 export function handleImpulse(game, payload) {

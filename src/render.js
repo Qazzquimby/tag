@@ -3,7 +3,8 @@ import { isSolid } from "./map.js";
 import { canSee, visionOrigins, visibilityPolygon } from "./vision.js";
 import { bodies } from "./collision.js";
 import { ENTITY_DEFS } from "./entities/index.js";
-import { CLASS_DEFS } from "./classes/index.js";
+import { CLASS_DEFS, PlayerClass } from "./classes/index.js";
+import { trailTiles } from "./map.js";
 
 let visionCanvas;
 
@@ -12,6 +13,7 @@ export function draw(ctx, world, game, now) {
   ctx.clearRect(0, 0, world.W, world.H);
   drawGrid(ctx, world);
   drawWalls(ctx, world);
+  if (me?.classId === PlayerClass.MONSTER) drawMonsterTrails(ctx, game, world, now);
 
   for (const body of bodies(game)) {
     const def = ENTITY_DEFS[body.kind];
@@ -21,7 +23,7 @@ export function draw(ctx, world, game, now) {
     if (visible) def.draw(ctx, body, me, now, game);
   }
 
-  drawVisionShade(ctx, world, me, game);
+  if (!CLASS_DEFS[me.classId].seesThroughWalls?.(me)) drawVisionShade(ctx, world, me, game);
   drawOverlay(ctx, world, game);
 }
 
@@ -50,6 +52,16 @@ function drawWalls(ctx, world) {
       ctx.fillRect(col * world.map.cell, row * world.map.cell, world.map.cell, world.map.cell);
     }
   }
+}
+
+function drawMonsterTrails(ctx, game, world, now) {
+  const cell = world.map.cell;
+  for (const tile of trailTiles(game.trails, world.map, now)) {
+    ctx.globalAlpha = tile.strength * 0.45;
+    ctx.fillStyle = "#a5e66e";
+    ctx.fillRect(tile.col * cell + 3, tile.row * cell + 3, cell - 6, cell - 6);
+  }
+  ctx.globalAlpha = 1;
 }
 
 function drawVisionShade(ctx, world, origin, game) {

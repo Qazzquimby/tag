@@ -86,12 +86,17 @@ export function createAbilityHud(container) {
 
     for (const { slot, ability, fillEl, textEl, slotEl } of slots) {
       const remaining = player.cooldowns[slot];
-      const fill = Math.max(0, Math.min(100, (remaining / ability.cooldown) * 100));
+      const level = ability.meter?.(player);
+      const value = level === undefined ? remaining / ability.cooldown : level;
+      const fill = Math.max(0, Math.min(1, value)) * 100;
       fillEl.style.width = `${fill}%`;
       textEl.textContent = remaining > 0
         ? `${ability.label || ""} ${remaining.toFixed(1)}`.trim()
         : ability.label || "";
-      slotEl.classList.toggle("ready", remaining <= 0);
+      slotEl.classList.toggle(
+        "ready",
+        level !== undefined ? level >= 1 : remaining <= 0,
+      );
     }
   };
 }

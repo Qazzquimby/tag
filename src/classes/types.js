@@ -24,6 +24,7 @@
  * @property {number} accel
  * @property {number} friction
  * @property {number} maxSpeed
+ * @property {boolean} phase Ignore map walls during movement.
  */
 
 /**
@@ -32,6 +33,7 @@
  * @property {(ctx: ClassContext) => (void|false)} use
  * @property {string} [label]
  * @property {string} [sound] URL of an mp3 asset
+ * @property {(player: import("../config.js").Player) => number} [meter] Returns ability charge from 0 to 1.
  */
 
 /**
@@ -46,6 +48,11 @@
  * @property {() => Object} [createState]
  * @property {(ctx: ClassContext) => void} [update]
  * @property {(ctx: ClassContext, intent: MovementIntent) => void} [adjustIntent]
+ * @property {(player: import("../config.js").Player) => Object} [netState]
+ * @property {(player: import("../config.js").Player) => void} [onScore]
+ * @property {(player: import("../config.js").Player, viewer: import("../config.js").Player) => number} [viewAlpha]
+ * @property {(viewer: import("../config.js").Player) => boolean} [seesThroughWalls]
+ * @property {(viewer: import("../config.js").Player, target: import("../config.js").Player, game: Object) => boolean} [senses]
  * @property {(ctx: ClassContext, moveDefault: (ctx: ClassContext) => void) => void} [move] Replaces default movement integration.
  * @property {Ability} [primary]
  * @property {Ability} [secondary]
