@@ -37,7 +37,7 @@ import { compareRank } from "./ranking.js";
 import {popClone} from "./classes/clone.js";
 import deathSound from "./assets/sfx/death.mp3";
 import { leaveRoom } from "./net.js";
-import { createMap, isAreaFree, mulberry32 } from "./map.js";
+import { buildWorld, getWorldSize, isAreaFree, mulberry32 } from "./map.js";
 
 export const DUMMY_ID = "dummy";
 
@@ -55,17 +55,23 @@ function currentRoundStartedAt() {
   return Math.floor(Date.now() / roundMs) * roundMs;
 }
 
-function regenerateMap(game) {
-  game.world.map = createMap(
-    game.world.W,
-    game.world.H,
-    mulberry32(game.roundStartedAt),
+function regenerateMap(game, size = getWorldSize(game.players.size)) {
+  Object.assign(
+    game.world,
+    buildWorld(size.cols, size.rows, mulberry32(game.roundStartedAt)),
   );
   for (const [id, entity] of game.entities) {
     if (!isAreaFree(game.world.map, entity.x, entity.y, entity.radius)) {
       game.entities.delete(id);
     }
   }
+  game.trails.clear();
+}
+
+function adoptLargerMap(game, mapInfo) {
+  if (mapInfo.roundStartedAt !== game.roundStartedAt) return;
+  if (mapInfo.cols * mapInfo.rows <= game.world.map.cols * game.world.map.rows) return;
+  regenerateMap(game, {cols: mapInfo.cols, rows: mapInfo.rows});
 }
 
 export function createGame(localId, world, name, sfx) {
@@ -116,6 +122,11 @@ function sendState(game, net) {
   if (me.status === Status.CHOOSING) return;
   net.send(NetEvent.STATE, {
     ...toStatePayload(me),
+    map: {
+      roundStartedAt: game.roundStartedAt,
+      cols: game.world.map.cols,
+      rows: game.world.map.rows,
+    },
     entities: replicatedStates(game, me.id),
   });
 }
@@ -246,6 +257,8 @@ export function toggleDummy(game) {
 
 export function handleState(game, payload) {
   if (payload.id === game.localId) return;
+
+  adoptLargerMap(game, payload.map);
 
   let player = game.players.get(payload.id);
   if (!player) {

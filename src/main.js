@@ -18,7 +18,7 @@ import {
   updateGame,
 } from "./game.js";
 import { createInput } from "./input.js";
-import { createMap } from "./map.js";
+import { buildWorld, getWorldSize } from "./map.js";
 import { createAbilityUseDetector, createSfx } from "./audio.js";
 import {
   createAbilityHud,
@@ -45,11 +45,10 @@ const roundTimerEl = document.querySelector("#round-timer");
 const roundBannerEl = document.querySelector("#round-banner");
 const abilityHudEl = document.querySelector("#ability-hud");
 
-const world = {
-  W: canvas.width,
-  H: canvas.height,
-  map: createMap(canvas.width, canvas.height),
-};
+const initialMapSize = getWorldSize(1);
+const world = buildWorld(initialMapSize.cols, initialMapSize.rows);
+canvas.width = world.W;
+canvas.height = world.H;
 const playerId = crypto.randomUUID();
 const tracker = createRankTracker();
 const net = { send };
@@ -158,6 +157,8 @@ function frame(now) {
     renderScoreboard(scoreboardEl, standings);
     renderRoundTimer(roundTimerEl, roundSecondsLeft(game));
     renderRoundResult(roundBannerEl, game.roundResult, now);
+    if (canvas.width !== world.W) canvas.width = world.W;
+    if (canvas.height !== world.H) canvas.height = world.H;
     draw(ctx, world, game, now);
   }
 

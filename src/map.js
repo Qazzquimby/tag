@@ -3,7 +3,7 @@ import {MAP_CELL} from "./config.js";
 const EPSILON = 1e-6;
 
 // Tuning
-const CELLS_PER_PLAYER = 65;
+const CELLS_PER_PLAYER = 75 //65;
 const MIN_CELLS = 150;
 const ASPECT = 1.5;            // width : height
 const CHUNK = 6;               // chunk size in cells (only used to spread obstacles out)
@@ -49,7 +49,7 @@ export function getWorldSize(playerCount) {
     const area = Math.max(MIN_CELLS, playerCount * CELLS_PER_PLAYER);
     const cols = Math.round(Math.sqrt(area * ASPECT));
     const rows = Math.round(area / cols);
-    return {W: cols * MAP_CELL, H: rows * MAP_CELL};
+    return {cols, rows};
 }
 
 function transform(shape, rot, mirror) {
@@ -131,9 +131,7 @@ function sealDisconnected(solid, cols, rows) {
 /**
  * Pass a seeded rng (e.g. mulberry32) if every client must build the same map.
  */
-export function createMap(W, H, rng = Math.random) {
-    const cols = Math.ceil(W / MAP_CELL);
-    const rows = Math.ceil(H / MAP_CELL);
+export function createMap(cols, rows, rng = Math.random) {
     const solid = new Uint8Array(cols * rows);
 
     // Visit chunks in random order, but place shapes at jittered positions
@@ -162,6 +160,14 @@ export function createMap(W, H, rng = Math.random) {
     sealDisconnected(solid, cols, rows);
 
     return {cell: MAP_CELL, cols, rows, solid};
+}
+
+export function buildWorld(cols, rows, rng = Math.random) {
+    return {
+        W: cols * MAP_CELL,
+        H: rows * MAP_CELL,
+        map: createMap(cols, rows, rng),
+    };
 }
 
 export function isSolid(map, col, row) {
