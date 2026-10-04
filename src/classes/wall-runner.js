@@ -4,14 +4,14 @@ import { isAreaFree } from "../map.js";
 import slideSound from "../assets/sfx/wall_runner/slide.wav";
 import jumpSound from "../assets/sfx/wall_runner/jump.wav";
 
-const RUN_SPEED = 350;
-const JUMP_SPEED = 800;
-const STICK_SPEED = 20;
-const WALL_PROBE = 2;
-const JUMP_RANGE = 20;
-const SEEK_MIN_SPEED = 120;
-const BLOCKED_TOLERANCE = 1e-3;
-const WRAP_CLEARANCE = 0.5;
+const GRIND_SPEED = 350; // speed along the wall while attached
+const JUMP_SPEED = 800; //speed of dash toward wall and jump off
+const STICK_SPEED = 20; // velocity toward the wall to prevent drifting off
+const WALL_PROBE = 2; // range to search for wall
+const MAX_DISTANCE_FROM_WALL_TO_GRIND = 20; // maximum distance to search for a wall when grinding
+const SEEK_MIN_SPEED = 120; // under this speed give up seeking wall
+const BLOCKED_TOLERANCE = 1e-3; // if speed is this much less than expected then youre blocked
+const WRAP_CLEARANCE = 0.5; // extra pixels on corner to check when wrapping
 
 const DIRECTIONS = Object.freeze([
   Object.freeze({ x: 1, y: 0 }),
@@ -37,8 +37,8 @@ function attach(self, state, normal, hint) {
   state.normal = normal;
   state.dir = dir;
   state.hint = null;
-  self.vx = dir.x * RUN_SPEED;
-  self.vy = dir.y * RUN_SPEED;
+  self.vx = dir.x * GRIND_SPEED;
+  self.vy = dir.y * GRIND_SPEED;
 }
 
 function fly(ctx, moveDefault) {
@@ -99,13 +99,13 @@ function runAlongWall(ctx) {
   const oldNormal = state.normal;
   const startAlong = self.x * oldDir.x + self.y * oldDir.y;
 
-  self.vx = oldDir.x * RUN_SPEED - oldNormal.x * STICK_SPEED;
-  self.vy = oldDir.y * RUN_SPEED - oldNormal.y * STICK_SPEED;
+  self.vx = oldDir.x * GRIND_SPEED - oldNormal.x * STICK_SPEED;
+  self.vy = oldDir.y * GRIND_SPEED - oldNormal.y * STICK_SPEED;
   moveWithCollision(self, self.radius, dt, game.world.map);
 
   const endAlong = self.x * oldDir.x + self.y * oldDir.y;
   const progress = endAlong - startAlong;
-  if (progress < RUN_SPEED * dt - BLOCKED_TOLERANCE) {
+  if (progress < GRIND_SPEED * dt - BLOCKED_TOLERANCE) {
     state.dir = oldNormal;
     state.normal = { x: -oldDir.x, y: -oldDir.y };
   } else if (
@@ -123,8 +123,8 @@ function runAlongWall(ctx) {
     }
   }
 
-  self.vx = state.dir.x * RUN_SPEED;
-  self.vy = state.dir.y * RUN_SPEED;
+  self.vx = state.dir.x * GRIND_SPEED;
+  self.vy = state.dir.y * GRIND_SPEED;
 }
 
 const wallRunner = {
@@ -183,8 +183,8 @@ const wallRunner = {
 
       for (const direction of DIRECTIONS) {
         const target = {
-          x: self.x + direction.x * JUMP_RANGE,
-          y: self.y + direction.y * JUMP_RANGE,
+          x: self.x + direction.x * MAX_DISTANCE_FROM_WALL_TO_GRIND,
+          y: self.y + direction.y * MAX_DISTANCE_FROM_WALL_TO_GRIND,
         };
         const lastFree = lastFreePointAlong(map, self.radius, from, target);
         if (lastFree.x === target.x && lastFree.y === target.y) continue;

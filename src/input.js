@@ -1,12 +1,24 @@
 import { PlayerClass } from "./classes/index.js";
 
 const CLASS_ORDER = Object.values(PlayerClass);
+const PRIMARY_BUTTON_MASK = 1;
+const SECONDARY_BUTTON_MASK = 2;
+const BUTTON_EVENTS = Object.freeze([
+  "pointerdown",
+  "pointermove",
+  "pointerup",
+  "pointerrawupdate",
+  "mousedown",
+  "mousemove",
+  "mouseup",
+]);
 
 export function createInput(canvas, world, actions) {
   const keys = new Set();
   const mouse = { x: world.W / 2, y: world.H / 2 };
   const move = { x: 0, y: 0 };
-  const pending = { primary: false, secondary: false };
+  let heldButtons = 0;
+  let pressedButtons = 0;
   const controls = {
     move,
     aim: mouse,
@@ -30,24 +42,23 @@ export function createInput(canvas, world, actions) {
     mouse.y = (event.clientY - rect.top) * (world.H / rect.height);
   }
 
+  function recordButtons(event) {
+    pressedButtons |= event.buttons & ~heldButtons;
+    heldButtons = event.buttons;
+  }
+
   canvas.addEventListener("mousemove", updateMouse);
+  for (const eventType of BUTTON_EVENTS) {
+    window.addEventListener(eventType, recordButtons);
+  }
 
   canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 
   canvas.addEventListener("mousedown", (event) => {
-    if (event.button === 0) {
-      controls.primary = true;
-      pending.primary = true;
-    } else if (event.button === 2) {
-      controls.secondary = true;
-      pending.secondary = true;
-    }
+    event.preventDefault();
   });
 
-  window.addEventListener("mouseup", (event) => {
-    if (event.button === 0) controls.primary = false;
-    if (event.button === 2) controls.secondary = false;
-  });
+  window.addEventListener("pointerup", recordButtons);
 
   window.addEventListener("keydown", (event) => {
     if (isTyping(event)) return;
@@ -68,10 +79,8 @@ export function createInput(canvas, world, actions) {
 
   window.addEventListener("blur", () => {
     keys.clear();
-    controls.primary = false;
-    controls.secondary = false;
-    pending.primary = false;
-    pending.secondary = false;
+    heldButtons = 0;
+    pressedButtons = 0;
   });
 
   function getControls() {
@@ -88,10 +97,11 @@ export function createInput(canvas, world, actions) {
     }
     move.x = x;
     move.y = y;
-    controls.primaryPressed = pending.primary;
-    controls.secondaryPressed = pending.secondary;
-    pending.primary = false;
-    pending.secondary = false;
+    controls.primary = Boolean(heldButtons & PRIMARY_BUTTON_MASK);
+    controls.secondary = Boolean(heldButtons & SECONDARY_BUTTON_MASK);
+    controls.primaryPressed = Boolean(pressedButtons & PRIMARY_BUTTON_MASK);
+    controls.secondaryPressed = Boolean(pressedButtons & SECONDARY_BUTTON_MASK);
+    pressedButtons = 0;
     return controls;
   }
 

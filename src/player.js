@@ -142,6 +142,10 @@ function applyMovement(ctx) {
 }
 
 function useAbility(player, ctx, def, slot, pressed) {
+  if (pressed) {
+    console.log("pressed", slot);
+  }
+
   const ability = def[slot];
   if (!pressed || !ability || player.cooldowns[slot] > 0) return;
   if (ability.use(ctx) === false) return;
@@ -192,7 +196,6 @@ export function updateOwned(player, controls, dt, game, net) {
     return;
   }
 
-  player.fearLeft = Math.max(0, player.fearLeft - dt);
   player.fearLeft = Math.max(0, player.fearLeft - dt);
   const activeControls = effectiveControls(player, controls);
   player.aim = Math.atan2(activeControls.aim.y - player.y, activeControls.aim.x - player.x);
