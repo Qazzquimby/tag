@@ -142,10 +142,6 @@ function applyMovement(ctx) {
 }
 
 function useAbility(player, ctx, def, slot, pressed) {
-  if (pressed) {
-    console.log("pressed", slot);
-  }
-
   const ability = def[slot];
   if (!pressed || !ability || player.cooldowns[slot] > 0) return;
   if (ability.use(ctx) === false) return;

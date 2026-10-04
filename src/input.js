@@ -3,6 +3,7 @@ import { PlayerClass } from "./classes/index.js";
 const CLASS_ORDER = Object.values(PlayerClass);
 const PRIMARY_BUTTON_MASK = 1;
 const SECONDARY_BUTTON_MASK = 2;
+const SECONDARY_KEY = "Space";
 const BUTTON_EVENTS = Object.freeze([
   "pointerdown",
   "pointermove",
@@ -63,8 +64,12 @@ export function createInput(canvas, world, actions) {
   window.addEventListener("keydown", (event) => {
     if (isTyping(event)) return;
     keys.add(event.code);
+    if (event.code === SECONDARY_KEY) event.preventDefault();
     if (event.repeat) return;
 
+    if (event.code === SECONDARY_KEY) {
+      pressedButtons |= SECONDARY_BUTTON_MASK;
+    }
     if (event.code.startsWith("Digit")) {
       const index = Number(event.code.slice(5)) - 1;
       if (index >= 0 && index < CLASS_ORDER.length) actions.selectClass(CLASS_ORDER[index]);
@@ -74,6 +79,7 @@ export function createInput(canvas, world, actions) {
   });
 
   window.addEventListener("keyup", (event) => {
+    if (event.code === SECONDARY_KEY && !isTyping(event)) event.preventDefault();
     keys.delete(event.code);
   });
 
@@ -98,7 +104,8 @@ export function createInput(canvas, world, actions) {
     move.x = x;
     move.y = y;
     controls.primary = Boolean(heldButtons & PRIMARY_BUTTON_MASK);
-    controls.secondary = Boolean(heldButtons & SECONDARY_BUTTON_MASK);
+    controls.secondary =
+      Boolean(heldButtons & SECONDARY_BUTTON_MASK) || keys.has(SECONDARY_KEY);
     controls.primaryPressed = Boolean(pressedButtons & PRIMARY_BUTTON_MASK);
     controls.secondaryPressed = Boolean(pressedButtons & SECONDARY_BUTTON_MASK);
     pressedButtons = 0;
