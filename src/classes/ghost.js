@@ -1,13 +1,12 @@
-import {NetEvent, Relation, Shape, Status} from "../config.js";
+import {NetEvent, Shape, Status} from "../config.js";
 import {isAreaFree} from "../map.js";
-import {relationTo} from "../ranking.js";
 import booSound from "../assets/sfx/ghost/boo.mp3";
 
-const GHOST_CHARGE_S = 5;
+const GHOST_CHARGE_S = 3;
 const GHOST_RECHARGE_RATE = 2;
-const FEAR_S = 2;
-const FEAR_RADIUS = 220;
-const GHOST_XRAY_RADIUS = 250;
+const FEAR_S = 0.5;
+const FEAR_RADIUS = 160;
+const GHOST_XRAY_RADIUS = 220;
 
 function applyFear(player, payload) {
   player.fearLeft = payload.duration;

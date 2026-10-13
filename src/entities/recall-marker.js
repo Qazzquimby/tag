@@ -33,7 +33,7 @@ export const RECALL_MARKER_DEF = Object.freeze({
   },
   draw(ctx, entity, viewer, now, game) {
     const owner = game.players.get(entity.ownerId);
-    ctx.globalAlpha = 0.4;
+    ctx.globalAlpha = 0.3;
     drawShape(
       ctx,
       entity,

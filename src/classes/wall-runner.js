@@ -4,8 +4,8 @@ import { isAreaFree } from "../map.js";
 import slideSound from "../assets/sfx/wall_runner/slide.wav";
 import jumpSound from "../assets/sfx/wall_runner/jump.wav";
 
-const GRIND_SPEED = 350; // speed along the wall while attached
-const JUMP_SPEED = 800; //speed of dash toward wall and jump off
+const GRIND_SPEED = 320; // speed along the wall while attached
+const JUMP_SPEED = 650; //speed of dash toward wall and jump off
 const STICK_SPEED = 20; // velocity toward the wall to prevent drifting off
 const WALL_PROBE = 2; // range to search for wall
 const MAX_DISTANCE_FROM_WALL_TO_GRIND = 20; // maximum distance to search for a wall when grinding
@@ -132,9 +132,9 @@ const wallRunner = {
   shape: Shape.CIRCLE,
   symbol: "🧗",
   radius: 11,
-  accel: 1600,
-  maxSpeed: 260,
-  friction: 3,
+  accel: 1800,
+  maxSpeed: 250,
+  friction: 2.5,
   createState() {
     return {
       attached: false,
