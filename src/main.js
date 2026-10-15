@@ -12,6 +12,7 @@ import {
   handleFear,
   handleImpulse,
   handleState,
+  handleWallEdit,
   roundSecondsLeft,
   selectClass,
   toggleDummy,
@@ -30,6 +31,7 @@ import {
 import { getRoomCode, joinRoom, leaveRoom, send } from "./net.js";
 import { computeStandings, createRankTracker } from "./scoreboard.js";
 import { draw } from "./render.js";
+import { createCamera, updateCamera } from "./camera.js";
 
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
@@ -47,8 +49,7 @@ const abilityHudEl = document.querySelector("#ability-hud");
 
 const initialMapSize = getWorldSize(1);
 const world = buildWorld(initialMapSize.cols, initialMapSize.rows);
-canvas.width = world.W;
-canvas.height = world.H;
+const camera = createCamera();
 const playerId = crypto.randomUUID();
 const tracker = createRankTracker();
 const net = { send };
@@ -71,7 +72,7 @@ function chooseClass(classId) {
   if (game) selectClass(game, classId);
 }
 
-const input = createInput(canvas, world, {
+const input = createInput(canvas, camera, {
   selectClass: chooseClass,
   toggleDummy() {
     if (game) toggleDummy(game);
@@ -135,6 +136,7 @@ async function enterRoom(code) {
       [NetEvent.FOOD_SPAWN]: (payload) => handleFoodSpawn(game, payload),
       [NetEvent.FOOD_EATEN]: (payload) => handleFoodEaten(game, payload),
       [NetEvent.FOOD_SYNC]: (payload) => handleFoodSync(game, payload),
+      [NetEvent.WALL_EDIT]: (payload) => handleWallEdit(game, payload),
       [NetEvent.ABILITY]: (payload) => {
         if (payload.id === playerId) return;
         sfx.playAbility(payload, game.players.get(game.localId));
@@ -157,17 +159,16 @@ function frame(now) {
     renderScoreboard(scoreboardEl, standings);
     renderRoundTimer(roundTimerEl, roundSecondsLeft(game));
     renderRoundResult(roundBannerEl, game.roundResult, now);
-    if (canvas.width !== world.W) canvas.width = world.W;
-    if (canvas.height !== world.H) canvas.height = world.H;
-    draw(ctx, world, game, now);
+    updateCamera(camera, world, game.players.get(game.localId));
+    draw(ctx, world, game, now, camera);
   }
 
   const me = game ? game.players.get(game.localId) : null;
   updateAbilityHud(me);
   if (me) announceAbilityUse(me);
   const choosing = me?.status === Status.CHOOSING;
-  const selectedClass = choosing ? null : me?.classId;
-  updateClassPicker(Boolean(me && me.status !== Status.ALIVE), selectedClass);
+  const selectedClass = choosing ? null : (me?.nextClassId ?? me?.classId);
+  updateClassPicker(Boolean(me), selectedClass);
   updateStatus();
   requestAnimationFrame(frame);
 }

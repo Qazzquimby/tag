@@ -2,6 +2,7 @@ import {
   EntityKind,
   FOOD_INTERVAL_S,
   FOOD_MAX,
+  FOOD_PER_PLAYER,
   NetEvent,
   ROUND_RESULT_S,
   ROUND_S,
@@ -37,6 +38,7 @@ import { compareRank } from "./ranking.js";
 import {popClone} from "./classes/clone.js";
 import deathSound from "./assets/sfx/death.mp3";
 import { leaveRoom } from "./net.js";
+import { applyWallEdit, tickWallEdits } from "./wall-edits.js";
 import { buildWorld, getWorldSize, isAreaFree, mulberry32 } from "./map.js";
 
 export const DUMMY_ID = "dummy";
@@ -66,6 +68,7 @@ function regenerateMap(game, size = getWorldSize(game.players.size)) {
     }
   }
   game.trails.clear();
+  game.wallEdits.clear();
 }
 
 function adoptLargerMap(game, mapInfo) {
@@ -89,6 +92,7 @@ export function createGame(localId, world, name, sfx) {
     lastActiveAt: performance.now(),
     leaving: false,
     trails: new Map(), // todo, seems not sufficiently generalizable
+    wallEdits: new Map(),
   };
 
   regenerateMap(game);
@@ -111,8 +115,12 @@ export function createGame(localId, world, name, sfx) {
 
 export function selectClass(game, classId) {
   const me = game.players.get(game.localId);
-  if (me.status === Status.ALIVE) return;
+  if (me.status === Status.ALIVE) {
+    me.nextClassId = classId;
+    return;
+  }
 
+  me.nextClassId = null;
   setPlayerClass(me, classId);
   if (me.status === Status.CHOOSING) respawn(me, game.players, game.world);
 }
@@ -192,7 +200,8 @@ export function updateGame(game, input, dt, net) {
   if (me.status === Status.ALIVE && me.classId === PlayerClass.MONSTER) {
     recordTrails(game.trails, game, now);
   }
-  updateEntities(game, dt);
+  tickWallEdits(game, dt);
+  updateEntities(game, dt, net);
   resolveBodyCollisions(game);
 
   for (const player of [me, dummy]) {
@@ -221,12 +230,12 @@ function isHost(game) {
 function spawnFood(game, dt, net) {
   game.foodTimer -= dt;
   if (game.foodTimer > 0) return;
-  game.foodTimer = FOOD_INTERVAL_S;
+  game.foodTimer = FOOD_INTERVAL_S / game.players.size;
   let foodCount = 0;
   for (const entity of game.entities.values()) {
     if (entity.kind === EntityKind.FOOD) foodCount++;
   }
-  if (foodCount >= FOOD_MAX) return;
+  if (foodCount >= FOOD_MAX + FOOD_PER_PLAYER * (game.players.size - 1)) return;
 
   const position = randomFoodPosition(game.world);
   const id = `${game.localId}:${game.nextEntityId++}`;
@@ -309,6 +318,10 @@ export function handleCatch(game, payload) {
 
 export function handleBye(game, payload) {
   game.players.delete(payload.id);
+}
+
+export function handleWallEdit(game, payload) {
+  applyWallEdit(game, payload);
 }
 
 export function handleFoodSpawn(game, payload) {

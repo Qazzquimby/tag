@@ -1,4 +1,4 @@
-import { AbilitySlot, RELATION_COLORS, Status } from "./config.js";
+import { AbilitySlot, RELATION_COLORS, ROUND_WARNING_S, Status } from "./config.js";
 import { CLASS_DEFS } from "./classes/index.js";
 
 function deltaArrow(delta) {
@@ -30,6 +30,7 @@ export function renderRoundTimer(element, secondsLeft) {
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;
   element.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
+  element.classList.toggle("warning", secondsLeft <= ROUND_WARNING_S);
 }
 
 export function renderRoundResult(element, result, now) {

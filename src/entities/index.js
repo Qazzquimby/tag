@@ -8,6 +8,10 @@ import { RECALL_MARKER_DEF } from "./recall-marker.js";
 import { CLONE_DEF } from "./clone.js";
 import { STICKY_BOMB_DEF } from "./sticky-bomb.js";
 import {ILLUSION_DEF} from "./monster-illusion.js";
+import { BLINK_TRAIL_DEF } from "./blink-trail.js";
+import { ROCKET_DEF } from "./rocket.js";
+import { HOOK_DEF } from "./hook.js";
+import { PORTAL_BLUE_DEF, PORTAL_ORANGE_DEF } from "./portal.js";
 
 export const ENTITY_DEFS = Object.freeze({
   [EntityKind.PLAYER]: PLAYER_DEF,
@@ -16,6 +20,11 @@ export const ENTITY_DEFS = Object.freeze({
   [EntityKind.CLONE]: CLONE_DEF,
   [EntityKind.STICKY_BOMB]: STICKY_BOMB_DEF,
   [EntityKind.ILLUSION]: ILLUSION_DEF,
+  [EntityKind.ROCKET]: ROCKET_DEF,
+  [EntityKind.HOOK]: HOOK_DEF,
+  [EntityKind.PORTAL_BLUE]: PORTAL_BLUE_DEF,
+  [EntityKind.PORTAL_ORANGE]: PORTAL_ORANGE_DEF,
+  [EntityKind.BLINK_TRAIL]: BLINK_TRAIL_DEF,
 });
 
 export function replicatedStates(game, ownerId) {
@@ -60,7 +69,7 @@ export function syncReplicatedEntities(game, owner, states = []) {
   }
 }
 
-export function updateEntities(game, dt) {
+export function updateEntities(game, dt, net) {
   for (const [id, entity] of game.entities) {
     const def = ENTITY_DEFS[entity.kind];
     if (def.despawnWithOwner) {
@@ -71,7 +80,7 @@ export function updateEntities(game, dt) {
       }
     }
 
-    def.update?.(entity, dt, game);
+    def.update?.(entity, dt, game, net);
     if (entity.isRemote) {
       smoothRemote(entity, dt);
       continue;

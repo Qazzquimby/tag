@@ -1,4 +1,4 @@
-import { MAP_CELL, Status } from "./config.js";
+import { MAP_CELL, Status, VIEW_H, VIEW_W } from "./config.js";
 import { isSolid } from "./map.js";
 import { canSee, canSeePoint, visionOrigins, visibilityPolygon, xrayRadius } from "./vision.js";
 import { bodies } from "./collision.js";
@@ -8,9 +8,11 @@ import { trailTiles } from "./map.js";
 
 let visionCanvas;
 
-export function draw(ctx, world, game, now) {
+export function draw(ctx, world, game, now, camera) {
   const me = game.players.get(game.localId);
-  ctx.clearRect(0, 0, world.W, world.H);
+  ctx.clearRect(0, 0, VIEW_W, VIEW_H);
+  ctx.save();
+  ctx.translate(-camera.x, -camera.y);
   drawGrid(ctx, world);
   drawWalls(ctx, world);
   if (me?.classId === PlayerClass.MONSTER) drawMonsterTrails(ctx, game, world, now, me);
@@ -24,7 +26,8 @@ export function draw(ctx, world, game, now) {
   }
 
   drawVisionShade(ctx, world, me, game);
-  drawOverlay(ctx, world, game);
+  ctx.restore();
+  drawOverlay(ctx, game);
 }
 
 function drawGrid(ctx, world) {
@@ -42,6 +45,8 @@ function drawGrid(ctx, world) {
     ctx.lineTo(world.W, y);
     ctx.stroke();
   }
+  ctx.strokeStyle = "#444";
+  ctx.strokeRect(0, 0, world.W, world.H);
 }
 
 function drawWalls(ctx, world) {
@@ -104,7 +109,7 @@ function drawVisionShade(ctx, world, origin, game) {
 }
 
 
-function drawOverlay(ctx, world, game) {
+function drawOverlay(ctx, game) {
   const me = game.players.get(game.localId);
 
   if (me && me.status === Status.CHOOSING) {
@@ -113,13 +118,13 @@ function drawOverlay(ctx, world, game) {
     ctx.fillStyle = "#fff";
     ctx.fillText(
       `Choose a class (1-${Object.keys(CLASS_DEFS).length})`,
-      world.W / 2,
-      world.H / 2,
+      VIEW_W / 2,
+      VIEW_H / 2,
     );
   } else if (me && me.status === Status.DEAD) {
     ctx.font = "bold 20px system-ui";
     ctx.textAlign = "center";
     ctx.fillStyle = "#ff4d4d";
-    ctx.fillText("Caught! Respawning…", world.W / 2, world.H / 2);
+    ctx.fillText("Caught! Respawning…", VIEW_W / 2, VIEW_H / 2);
   }
 }

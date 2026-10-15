@@ -1,6 +1,7 @@
 import { Shape } from "../config.js";
 import { createRecallMarker, recallMarkerId } from "../entities/recall-marker.js";
 import { furthestFreePointAlong } from "../collision.js";
+import { createBlinkTrail } from "../entities/blink-trail.js";
 import blinkSound from "../assets/sfx/tracer/blink.mp3";
 import recallSound from "../assets/sfx/tracer/recall.mp3";
 
@@ -56,6 +57,8 @@ const tracer = {
         y: self.y + (dy / distance) * travel,
       };
       const destination = furthestFreePointAlong(game.world.map, self.radius, from, to);
+      const trailId = `blink:${game.localId}:${game.nextEntityId++}`;
+      game.entities.set(trailId, createBlinkTrail(self, trailId, from, destination));
       self.x = destination.x;
       self.y = destination.y;
     },

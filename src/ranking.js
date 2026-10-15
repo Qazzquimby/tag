@@ -17,6 +17,10 @@ export function topRankedPlayer(players) {
   return [...players.values()].sort(compareRank)[0] ?? null;
 }
 
+export function rankOf(players, id) {
+  return [...players.values()].sort(compareRank).findIndex((player) => player.id === id);
+}
+
 export function displayRelation(viewer, other) {
   if (viewer.id !== other.id && other.classNet?.disguised) return Relation.BELOW;
   return relationTo(viewer, other);

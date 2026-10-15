@@ -80,6 +80,7 @@ export const NetEvent = Object.freeze({
  * @property {string} id
  * @property {string} name
  * @property {number} classId
+ * @property {number|null} nextClassId
  * @property {number} status
  * @property {number} x
  * @property {number} y
@@ -115,6 +116,8 @@ export const MAP_CELL = 50;
 export const WALL_BOUNCE = 0.5;
 export const REMOTE_SNAP_DIST = 100;
 export const VISION_RAYS = 720;
+export const VIEW_W = 900;
+export const VIEW_H = 600;
 export const SPAWN_CLEARANCE = 20;
 
 export const SCORE_PLAYER = 10;

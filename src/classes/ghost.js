@@ -1,5 +1,7 @@
-import {NetEvent, Shape, Status} from "../config.js";
+import {NetEvent, Relation, Shape, Status} from "../config.js";
 import {isAreaFree} from "../map.js";
+import {nearestFreePoint} from "../collision.js";
+import {relationTo} from "../ranking.js";
 import booSound from "../assets/sfx/ghost/boo.mp3";
 
 const GHOST_CHARGE_S = 3;
@@ -32,7 +34,12 @@ const ghost = {
     state.disguiseLeft = Math.max(0, state.disguiseLeft - dt);
     const wantsPhase = controls.secondary && state.charge > 0;
     const insideWall = !isAreaFree(game.world.map, self.x, self.y, self.radius);
-    state.phasing = wantsPhase || (state.phasing && insideWall);
+    state.phasing = wantsPhase;
+    if (insideWall && !wantsPhase) {
+      const free = nearestFreePoint(game.world.map, self.radius, self);
+      self.x = free.x;
+      self.y = free.y;
+    }
 
     if (wantsPhase) {
       state.charge = Math.max(0, state.charge - dt);
@@ -69,7 +76,7 @@ const ghost = {
       self.classState.disguiseLeft = 3;
       for (const target of game.players.values()) {
         if (target.id === self.id || target.status !== Status.ALIVE) continue;
-        // if (relationTo(self, target) !== Relation.ABOVE) continue;
+        if (relationTo(self, target) !== Relation.ABOVE) continue;
         if (Math.hypot(target.x - self.x, target.y - self.y) > FEAR_RADIUS) continue;
         const payload = {victim: target.id, x: self.x, y: self.y, duration: FEAR_S};
         if (target.isDummy) applyFear(target, payload.x, payload.y, payload.duration);

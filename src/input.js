@@ -1,4 +1,5 @@
 import { PlayerClass } from "./classes/index.js";
+import { VIEW_H, VIEW_W } from "./config.js";
 
 const CLASS_ORDER = Object.values(PlayerClass);
 const PRIMARY_BUTTON_MASK = 1;
@@ -14,15 +15,16 @@ const BUTTON_EVENTS = Object.freeze([
   "mouseup",
 ]);
 
-export function createInput(canvas, world, actions) {
+export function createInput(canvas, camera, actions) {
   const keys = new Set();
-  const mouse = { x: world.W / 2, y: world.H / 2 };
+  const mouse = { x: VIEW_W / 2, y: VIEW_H / 2 };
+  const aim = { x: 0, y: 0 };
   const move = { x: 0, y: 0 };
   let heldButtons = 0;
   let pressedButtons = 0;
   const controls = {
     move,
-    aim: mouse,
+    aim,
     primary: false,
     secondary: false,
     primaryPressed: false,
@@ -39,8 +41,8 @@ export function createInput(canvas, world, actions) {
 
   function updateMouse(event) {
     const rect = canvas.getBoundingClientRect();
-    mouse.x = (event.clientX - rect.left) * (world.W / rect.width);
-    mouse.y = (event.clientY - rect.top) * (world.H / rect.height);
+    mouse.x = (event.clientX - rect.left) * (canvas.width / rect.width);
+    mouse.y = (event.clientY - rect.top) * (canvas.height / rect.height);
   }
 
   function recordButtons(event) {
@@ -103,6 +105,8 @@ export function createInput(canvas, world, actions) {
     }
     move.x = x;
     move.y = y;
+    aim.x = mouse.x + camera.x;
+    aim.y = mouse.y + camera.y;
     controls.primary = Boolean(heldButtons & PRIMARY_BUTTON_MASK);
     controls.secondary =
       Boolean(heldButtons & SECONDARY_BUTTON_MASK) || keys.has(SECONDARY_KEY);

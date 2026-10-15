@@ -1,7 +1,7 @@
-import { RELATION_COLORS, Status } from "../config.js";
+import { Relation, RELATION_COLORS, Status } from "../config.js";
 import { CLASS_DEFS } from "../classes/index.js";
 import { catchPlayer } from "../player.js";
-import { displayRelation } from "../ranking.js";
+import { displayRelation, relationTo } from "../ranking.js";
 import { canSee } from "../vision.js";
 import { drawShape, drawSymbol, drawLabel } from "../render-shapes.js";
 
@@ -45,7 +45,9 @@ function drawInvulnerability(ctx, player, def) {
 export const PLAYER_DEF = Object.freeze({
   isVisible(player, viewer, game) {
     if (player.status === Status.CHOOSING) return false;
-    return player.id === viewer.id || canSee(game, viewer, player);
+    if (player.id === viewer.id) return true;
+    if (player.status === Status.SPAWNING && relationTo(viewer, player) !== Relation.BELOW) return false;
+    return canSee(game, viewer, player);
   },
   draw(ctx, player, viewer, now, alphaScale = 1) {
     if (player.status === Status.DEAD) return;

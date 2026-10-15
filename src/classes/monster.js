@@ -1,11 +1,13 @@
 import {AbilitySlot, Shape} from "../config.js";
 import {isAreaFree, trailStrength} from "../map.js";
-import {topRankedPlayer} from "../ranking.js";
+import {rankOf, topRankedPlayer} from "../ranking.js";
 import leapSound from "../assets/sfx/monster/leap.ogg";
 import {createIllusion, illusionId} from "../entities/monster-illusion.js";
 
 const TRAIL_BOOST = 1.4;
 const LUNGE_STRENGTH = 1200;
+const RANK_BOOST_STEP = 0.08;
+const MAX_RANK_BOOST = 0.5;
 
 const monster = {
   name: "Monster",
@@ -16,6 +18,9 @@ const monster = {
   maxSpeed: 190,
   friction: 5,
   adjustIntent({ self, game }, intent) {
+    const rankBoost = 1 + Math.min(MAX_RANK_BOOST, rankOf(game.players, self.id) * RANK_BOOST_STEP);
+    intent.maxSpeed *= rankBoost;
+    intent.accel *= rankBoost;
     const strength = trailStrength(game.trails, game.world.map, self.x, self.y, performance.now());
     if (strength > 0) {
       intent.maxSpeed *= TRAIL_BOOST;

@@ -28,6 +28,8 @@ canvas { display: block; width: min(100cqw, 150cqh); height: auto; border: 1px s
 .sidebar { display: flex; flex: none; flex-direction: column; gap: 8px; width: 200px; min-height: 0; overflow-y: auto; }
 .sidebar h2 { margin: 0 0 8px; font-size: 16px; }
 .round-timer { margin: 0 0 8px; color: #aaa; font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.round-timer.warning { color: #ff4d4d; animation: round-warning 1s ease-in-out infinite; }
+@keyframes round-warning { 50% { opacity: 0.4; } }
 #scoreboard { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 #scoreboard li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 6px; color: #111; font-weight: 600; }
 @media (max-width: 700px) {

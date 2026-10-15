@@ -14,6 +14,9 @@ import {
   REMOTE_SNAP_DIST,
   Status,
 } from "./config.js";
+import { CLASS_DEFS } from "./classes/index.js";
+import { moveWithCollision } from "./collision.js";
+import { randomFreePosition } from "./map.js";
 import { relationTo } from "./ranking.js";
 import eatSound from "./assets/sfx/eat_food.mp3";
 
@@ -54,6 +57,7 @@ export function createPlayer({
     lastSeen: performance.now(),
     isDummy,
     classState: null,
+    nextClassId: null,
     classNet: {},
     fearLeft: 0,
     fearX: 0,
@@ -70,6 +74,10 @@ export function setPlayerClass(player, classId) {
 
 export function respawn(player, players, world) {
   clearTransient(player);
+  if (player.nextClassId !== null) {
+    setPlayerClass(player, player.nextClassId);
+    player.nextClassId = null;
+  }
   const spawn = pickSpawn(players, player.id, world);
   player.x = spawn.x;
   player.y = spawn.y;
