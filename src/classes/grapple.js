@@ -71,9 +71,9 @@ const grapple = {
   shape: Shape.CIRCLE,
   symbol: "🪝",
   radius: 11,
-  accel: 1400,
-  maxSpeed: 210,
-  friction: 3,
+  accel: 500,
+  maxSpeed: 180,
+  friction: 1,
   update({ self, controls, dt, game }) {
     for (const slot of Object.values(AbilitySlot)) {
       const id = hookId(self.id, slot);

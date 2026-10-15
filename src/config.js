@@ -124,8 +124,8 @@ export const SCORE_PLAYER = 10;
 export const SCORE_FOOD = 6;
 
 export const DEAD_S = 3;
-export const SPAWN_INVULNERABLE_S = 2;
-export const EAT_INVULNERABLE_S = 1;
+export const SPAWN_INVULNERABLE_S = 3;
+export const EAT_INVULNERABLE_S = 2;
 export const SPAWN_WARNING_S = 1.5;
 export const FOOD_WARNING_S = 1.5;
 

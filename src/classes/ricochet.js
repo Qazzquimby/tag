@@ -3,7 +3,7 @@ import { isSolid } from "../map.js";
 import { requestWallEdit } from "../wall-edits.js";
 
 const DASH_SPEED = 900;
-const WALL_EDIT_S = 1;
+const WALL_EDIT_S = 4;
 
 function isCellOccupied(game, col, row) {
   const { cell } = game.world.map;

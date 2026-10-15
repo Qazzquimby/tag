@@ -36,7 +36,7 @@ function portalDef(kind) {
   const { color, partner } = PORTALS[kind];
 
   return Object.freeze({
-    despawnWithOwner: true,
+    despawnWithOwner: false,
     replicated: true,
     create(owner) {
       return createPortal(owner, kind, owner.x, owner.y);

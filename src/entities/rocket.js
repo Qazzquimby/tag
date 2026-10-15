@@ -11,7 +11,7 @@ const ROCKET_FONT_SIZE = 16;
 const BLAST = Object.freeze({ radius: 130, impulse: 1100, stun: 0.25 });
 
 export const EXPLODE_SPEED = 80;
-export const ROCKET_FRICTION = 2;
+export const ROCKET_FRICTION = 5;
 
 export function createRocket(owner, id, vx, vy) {
   return createEntity({
