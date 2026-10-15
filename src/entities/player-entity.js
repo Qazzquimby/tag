@@ -1,17 +1,9 @@
-import {
-  BOOST_S,
-  NetEvent,
-  RELATION_COLORS,
-  Relation,
-  SCORE_PLAYER,
-  Status,
-} from "../config.js";
+import { RELATION_COLORS, Status } from "../config.js";
 import { CLASS_DEFS } from "../classes/index.js";
-import { addScore, kill } from "../player.js";
-import { displayRelation, relationTo } from "../ranking.js";
+import { catchPlayer } from "../player.js";
+import { displayRelation } from "../ranking.js";
 import { canSee } from "../vision.js";
 import { drawShape, drawSymbol, drawLabel } from "../render-shapes.js";
-import eatSound from "../assets/sfx/eat_food.mp3";
 
 function drawAimArrow(ctx, player, def, color) {
   const start = def.radius + 4;
@@ -40,12 +32,22 @@ function drawSpawnWarning(ctx, player, def, color, now) {
   ctx.setLineDash([]);
 }
 
+function drawInvulnerability(ctx, player, def) {
+  ctx.beginPath();
+  ctx.arc(player.x, player.y, def.radius + 5, 0, Math.PI * 2);
+  ctx.strokeStyle = "#fff";
+  ctx.globalAlpha = 0.5;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
 export const PLAYER_DEF = Object.freeze({
   isVisible(player, viewer, game) {
     if (player.status === Status.CHOOSING) return false;
     return player.id === viewer.id || canSee(game, viewer, player);
   },
-  draw(ctx, player, viewer, now) {
+  draw(ctx, player, viewer, now, alphaScale = 1) {
     if (player.status === Status.DEAD) return;
 
     const def = CLASS_DEFS[player.classId];
@@ -56,22 +58,15 @@ export const PLAYER_DEF = Object.freeze({
       return;
     }
 
-    ctx.globalAlpha = def.viewAlpha?.(player, viewer) ?? 1;
+    ctx.globalAlpha = (def.viewAlpha?.(player, viewer) ?? 1) * alphaScale;
     drawShape(ctx, player, def, color, player.id === viewer.id);
     drawSymbol(ctx, player, def);
     drawAimArrow(ctx, player, def, color);
-    drawLabel(ctx, player, def);
+        drawLabel(ctx, player, def);
     ctx.globalAlpha = 1;
+    if (player.invulnerableLeft > 0) drawInvulnerability(ctx, player, def);
   },
   onTouch(other, catcher, game, net) {
-    if (relationTo(catcher, other) !== Relation.ABOVE) return;
-
-    addScore(catcher, SCORE_PLAYER);
-    catcher.boostLeft = BOOST_S;
-    kill(other);
-    if (catcher.id === game.localId) {
-      game.sfx.play(eatSound, catcher, game.players.get(game.localId));
-    }
-    if (!other.isDummy) net.send(NetEvent.CATCH, { victim: other.id });
+    catchPlayer(catcher, other, game, net);
   },
 });

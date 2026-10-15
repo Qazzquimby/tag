@@ -1,7 +1,8 @@
-
+Desired new state (as things should be, not as they are):
 Monster moves faster depending on leaderboard position.
 Monster lunge recharges after 6s (or upon eating)
 Ghost not phasing is pushed out of walls.
+Ghost fear only works on prey
 Tracer has some graphic to show her teleport movement. An arrow or smear sprite?
 Clone and monster illusion appear full opacity to enemies, but transparent to the player
 
@@ -12,13 +13,13 @@ Some kind of warning when there are 15s remaining.
 Food should spawn more with more players.
 
 
-
-
 Rocket jumper, shoots projectile like sticky bomb. Upon reaching near 0 speed immediately explodes. Has a minimum starting velocity.
 
 Grapple: Left and right click while held fires grapple at mouse cursor. On connecting to wall or entity pulls towards them. Each button controls a separate grapple.
 
 Portal: Left and right click create blue and orange portal tiles. Any entity entering one portal moves to the same pixel location on the other portal. 
+
+Ricochet: Very little wasd control. Lmb gives high velocity in aimed direction. Right mouse button clicked on an empty space creates a wall there for 1s. Clicked on a wall removes the wall for 1s.
 
 # Car
 driving controls, w is forwards, left and right steer.
@@ -33,6 +34,11 @@ Can catch prey with body, but can only be caught at head. Dies and loses 10pt if
 
 Left click, gain speed for 1s. 6s cd.
 Right click, swap head and tail (change direction to move away from body)
+
+
+Should be able to select next class while alive. Change takes place after next death.
+
+###### Later
 
 # Spider
 left click shoot strand forward and backward which stretches across entire map, ignoring walls.

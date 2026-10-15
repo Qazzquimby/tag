@@ -1,5 +1,18 @@
 export const Status = Object.freeze({ ALIVE: 0, DEAD: 1, SPAWNING: 2, CHOOSING: 3 });
-export const EntityKind = Object.freeze({ PLAYER: 0, FOOD: 1, RECALL_MARKER: 2, CLONE: 3, STICKY_BOMB: 4, ILLUSION: 5 });
+export const EntityKind = Object.freeze({
+  PLAYER: 0,
+  FOOD: 1,
+  RECALL_MARKER: 2,
+  CLONE: 3,
+  STICKY_BOMB: 4,
+  ILLUSION: 5,
+  ROCKET: 6,
+  HOOK: 7,
+  PORTAL_BLUE: 8,
+  PORTAL_ORANGE: 9,
+  BLINK_TRAIL: 10,
+  SNAKE_SEGMENT: 11,
+});
 export const Shape = Object.freeze({ CIRCLE: 0, SQUARE: 1, TRIANGLE: 2 });
 export const Relation = Object.freeze({ SELF: 0, ABOVE: 1, BELOW: 2 });
 export const AbilitySlot = Object.freeze({ PRIMARY: "primary", SECONDARY: "secondary" });
@@ -16,6 +29,7 @@ export const NetEvent = Object.freeze({
   CLONE_POPPED: "clone-popped",
   IMPULSE: "impulse",
   FEAR: "fear",
+  WALL_EDIT: "wall-edit",
 });
 
 /**
@@ -50,6 +64,10 @@ export const NetEvent = Object.freeze({
  * @property {number} [lifeLeft]
  * @property {string} [name]
  * @property {import("./classes/types.js").ClassDef} [appearance]
+ * @property {string|null} [targetId]
+ * @property {number} [toX]
+ * @property {number} [toY]
+ * @property {Set<string>} [inside]
  */
 
 /**
@@ -82,6 +100,7 @@ export const NetEvent = Object.freeze({
  * @property {number} fearLeft
  * @property {number} fearX
  * @property {number} fearY
+ * @property {number} invulnerableLeft
  * @property {{primary: number, secondary: number}} cooldowns
  */
 
@@ -102,14 +121,18 @@ export const SCORE_PLAYER = 10;
 export const SCORE_FOOD = 6;
 
 export const DEAD_S = 3;
+export const SPAWN_INVULNERABLE_S = 2;
+export const EAT_INVULNERABLE_S = 1;
 export const SPAWN_WARNING_S = 1.5;
 export const FOOD_WARNING_S = 1.5;
 
 export const ROUND_S = 90;
 export const ROUND_RESULT_S = 10;
+export const ROUND_WARNING_S = 15;
 
 export const FOOD_INTERVAL_S = 3;
 export const FOOD_MAX = 12;
+export const FOOD_PER_PLAYER = 4;
 export const FOOD_RADIUS = 7;
 export const ENTITY_FRICTION = 4;
 

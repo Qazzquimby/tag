@@ -31,6 +31,7 @@
  * @typedef {Object} Ability
  * @property {number} cooldown
  * @property {(ctx: ClassContext) => (void|false)} use
+ * @property {boolean} [repeatWhileHeld] Re-triggers whenever off cooldown while the button is held.
  * @property {string} [label]
  * @property {string} [sound] URL of an mp3 asset
  * @property {(player: import("../config.js").Player) => number} [meter] Returns ability charge from 0 to 1.
@@ -45,6 +46,7 @@
  * @property {number} accel
  * @property {number} maxSpeed
  * @property {number} friction
+ * @property {number} [bounce] Fraction of velocity kept when bouncing off walls.
  * @property {() => Object} [createState]
  * @property {(ctx: ClassContext) => void} [update]
  * @property {(ctx: ClassContext, intent: MovementIntent) => void} [adjustIntent]

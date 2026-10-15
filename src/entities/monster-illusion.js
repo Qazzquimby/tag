@@ -62,7 +62,7 @@ export const ILLUSION_DEF = Object.freeze({
   draw(ctx, entity, viewer, now, game) {
     const owner = game.players.get(entity.ownerId);
     if (!owner) return;
-    ctx.globalAlpha = 0.65;
+    ctx.globalAlpha = viewer.id === owner.id ? 0.4 : 1;
     drawShape(ctx, entity, entity.appearance, RELATION_COLORS[relationTo(viewer, owner)], false);
     drawSymbol(ctx, entity, entity.appearance);
     drawLabel(ctx, entity, entity.appearance);

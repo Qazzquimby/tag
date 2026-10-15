@@ -2,6 +2,7 @@ import { EntityKind, WALL_BOUNCE } from "./config.js";
 import { isAreaFree, isSolid } from "./map.js";
 
 const EPSILON = 1e-6;
+const FREE_POINT_STEP = 4;
 
 export function* bodies(game) {
   yield* game.entities.values();
@@ -16,7 +17,7 @@ function cellRange(min, max, cell) {
   ];
 }
 
-function resolveX(player, half, map) {
+function resolveX(player, half, map, bounce) {
   const [minRow, maxRow] = cellRange(player.y - half, player.y + half, map.cell);
   const [minCol, maxCol] = cellRange(player.x - half, player.x + half, map.cell);
   let collisionFace = player.vx > 0 ? Infinity : -Infinity;
@@ -31,11 +32,11 @@ function resolveX(player, half, map) {
 
   if (collisionFace !== Infinity && collisionFace !== -Infinity) {
     player.x = collisionFace;
-    player.vx = -player.vx * WALL_BOUNCE;
+    player.vx = -player.vx * bounce;
   }
 }
 
-function resolveY(player, half, map) {
+function resolveY(player, half, map, bounce) {
   const [minRow, maxRow] = cellRange(player.y - half, player.y + half, map.cell);
   const [minCol, maxCol] = cellRange(player.x - half, player.x + half, map.cell);
   let collisionFace = player.vy > 0 ? Infinity : -Infinity;
@@ -50,7 +51,7 @@ function resolveY(player, half, map) {
 
   if (collisionFace !== Infinity && collisionFace !== -Infinity) {
     player.y = collisionFace;
-    player.vy = -player.vy * WALL_BOUNCE;
+    player.vy = -player.vy * bounce;
   }
 }
 
@@ -86,11 +87,25 @@ export function lastFreePointAlong(map, half, from, to) {
   return { x: to.x, y: to.y };
 }
 
-export function moveWithCollision(player, half, dt, map) {
+export function nearestFreePoint(map, half, from) {
+  for (let radius = 0; ; radius += FREE_POINT_STEP) {
+    const samples = Math.max(1, Math.ceil((radius * 2 * Math.PI) / FREE_POINT_STEP));
+    for (let i = 0; i < samples; i++) {
+      const angle = (i / samples) * Math.PI * 2;
+      const point = {
+        x: from.x + Math.cos(angle) * radius,
+        y: from.y + Math.sin(angle) * radius,
+      };
+      if (isAreaFree(map, point.x, point.y, half)) return point;
+    }
+  }
+}
+
+export function moveWithCollision(player, half, dt, map, bounce = WALL_BOUNCE) {
   player.x += player.vx * dt;
-  resolveX(player, half, map);
+  resolveX(player, half, map, bounce);
   player.y += player.vy * dt;
-  resolveY(player, half, map);
+  resolveY(player, half, map, bounce);
 }
 
 function collidesWith(a, b) {

@@ -1,16 +1,21 @@
-import { moveWithCollision } from "./collision.js";
-import {CLASS_DEFS, PlayerClass} from "./classes/index.js";
-import { randomFreePosition } from "./map.js";
 import {
   BOOST_MULT,
+  BOOST_S,
   DEAD_S,
+  EAT_INVULNERABLE_S,
   EntityKind,
+  NetEvent,
+  Relation,
+  SCORE_PLAYER,
   SPAWN_CLEARANCE,
+  SPAWN_INVULNERABLE_S,
   SPAWN_SAMPLES,
   SPAWN_WARNING_S,
   REMOTE_SNAP_DIST,
   Status,
 } from "./config.js";
+import { relationTo } from "./ranking.js";
+import eatSound from "./assets/sfx/eat_food.mp3";
 
 export function createPlayer({
   id,
@@ -45,6 +50,7 @@ export function createPlayer({
     boostLeft: 0,
     stateTimer: 0,
     stunLeft: 0,
+    invulnerableLeft: 0,
     lastSeen: performance.now(),
     isDummy,
     classState: null,
@@ -90,6 +96,7 @@ function updateSpawning(player, dt) {
   player.stateTimer -= dt;
   if (player.stateTimer <= 0) {
     player.status = Status.ALIVE;
+    player.invulnerableLeft = SPAWN_INVULNERABLE_S;
     resetAbilities(player);
   }
 }
@@ -128,7 +135,7 @@ function moveDefault(ctx) {
     self.x = Math.max(self.radius, Math.min(game.world.W - self.radius, self.x + self.vx * dt));
     self.y = Math.max(self.radius, Math.min(game.world.H - self.radius, self.y + self.vy * dt));
   } else {
-    moveWithCollision(self, self.radius, dt, game.world.map);
+    moveWithCollision(self, self.radius, dt, game.world.map, def.bounce);
   }
 }
 
@@ -143,7 +150,8 @@ function applyMovement(ctx) {
 
 function useAbility(player, ctx, def, slot, pressed) {
   const ability = def[slot];
-  if (!pressed || !ability || player.cooldowns[slot] > 0) return;
+  if (!ability || player.cooldowns[slot] > 0) return;
+  if (!pressed && !(ability.repeatWhileHeld && ctx.controls[slot])) return;
   if (ability.use(ctx) === false) return;
   player.cooldowns[slot] = ability.cooldown;
 }
@@ -181,6 +189,7 @@ export function updateOwned(player, controls, dt, game, net) {
   player.cooldowns.primary = Math.max(0, player.cooldowns.primary - dt);
   player.cooldowns.secondary = Math.max(0, player.cooldowns.secondary - dt);
   player.stunLeft = Math.max(0, player.stunLeft - dt);
+  player.invulnerableLeft = Math.max(0, player.invulnerableLeft - dt);
 
   if (player.status === Status.DEAD) {
     updateDead(player, dt, game.players, game.world);
@@ -240,7 +249,21 @@ export function startRound(player, players, world) {
 export function addScore(player, points) {
   player.score += points;
   player.scoredAt = Date.now();
+  player.invulnerableLeft = Math.max(player.invulnerableLeft, EAT_INVULNERABLE_S);
   CLASS_DEFS[player.classId].onScore?.(player);
+}
+
+export function catchPlayer(catcher, victim, game, net) {
+  if (relationTo(catcher, victim) !== Relation.ABOVE) return;
+  if (victim.invulnerableLeft > 0) return;
+
+  addScore(catcher, SCORE_PLAYER);
+  catcher.boostLeft = BOOST_S;
+  kill(victim);
+  if (catcher.id === game.localId) {
+    game.sfx.play(eatSound, catcher, game.players.get(game.localId));
+  }
+  if (!victim.isDummy) net.send(NetEvent.CATCH, { victim: victim.id });
 }
 
 export function pickSpawn(players, selfId, world) {
@@ -286,6 +309,7 @@ export function toStatePayload(player) {
     aim: player.aim,
     score: player.score,
     scoredAt: player.scoredAt,
+    invulnerableLeft: player.invulnerableLeft,
     classNet: player.classNet,
   };
 }
@@ -302,6 +326,7 @@ export function applyStatePayload(player, payload) {
   player.score = payload.score;
   player.scoredAt = payload.scoredAt;
   player.classNet = payload.classNet;
+  player.invulnerableLeft = payload.invulnerableLeft;
   player.tx = payload.x;
   player.ty = payload.y;
   player.lastSeen = performance.now();
