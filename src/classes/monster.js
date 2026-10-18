@@ -15,7 +15,7 @@ const monster = {
   symbol: "👹",
   radius: 18,
   accel: 1000,
-  maxSpeed: 190,
+  maxSpeed: 200,
   friction: 5,
   adjustIntent({ self, game }, intent) {
     const rankBoost = 1 + Math.min(MAX_RANK_BOOST, rankOf(game.players, self.id) * RANK_BOOST_STEP);
