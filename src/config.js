@@ -65,6 +65,8 @@ export const NetEvent = Object.freeze({
  * @property {string} [name]
  * @property {import("./classes/types.js").ClassDef} [appearance]
  * @property {string|null} [targetId]
+ * @property {boolean} [flying]
+ * @property {number} [travelled]
  * @property {number} [toX]
  * @property {number} [toY]
  * @property {Set<string>} [inside]

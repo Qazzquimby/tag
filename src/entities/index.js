@@ -30,7 +30,7 @@ export const ENTITY_DEFS = Object.freeze({
 export function replicatedStates(game, ownerId) {
   return [...game.entities.values()]
     .filter((entity) => entity.ownerId === ownerId && ENTITY_DEFS[entity.kind].replicated)
-    .map(({ id, kind, x, y, vx, vy }) => ({ id, kind, x, y, vx, vy }));
+    .map(({ id, kind, x, y, vx, vy, toX, toY }) => ({ id, kind, x, y, vx, vy, toX, toY }));
 }
 
 export function syncReplicatedEntities(game, owner, states = []) {
@@ -40,7 +40,7 @@ export function syncReplicatedEntities(game, owner, states = []) {
     let entity = game.entities.get(state.id);
     const isNew = !entity;
     if (isNew) {
-      entity = ENTITY_DEFS[state.kind].create(owner, state.id);
+      entity = ENTITY_DEFS[state.kind].create(owner, state.id, state);
       game.entities.set(state.id, entity);
     }
 

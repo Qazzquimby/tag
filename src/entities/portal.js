@@ -51,8 +51,9 @@ function portalDef(kind) {
       const inside = new Set();
       for (const body of bodies(game)) {
         if (!body.collides || !isSimulatedHere(body, game)) continue;
-        if (Math.abs(body.x - portal.x) > portal.radius) continue;
-        if (Math.abs(body.y - portal.y) > portal.radius) continue;
+        const reach = portal.radius - body.radius;
+        if (Math.abs(body.x - portal.x) > reach) continue;
+        if (Math.abs(body.y - portal.y) > reach) continue;
 
         inside.add(body.id);
         if (!other || portal.inside.has(body.id)) continue;

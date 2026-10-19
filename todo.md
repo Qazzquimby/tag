@@ -1,12 +1,6 @@
 Make a squeak sound when someone is not eaten due to invuln (dont play it every frame)
 
 Food should be affected by physics like other entities, eg pushed by knockback blast.
-Tracer's trail should be visible to all players, not just tracer
-When a player moves through a portal it can cause them to teleport through walls if their new location intersects a wall. Should only trigger if they're entirely in the portal?
-Grapple should shoot a fast moving grapple projectile rather than connect via hitscan.
-
-Should be able to select next class while alive. Change takes place after next death.
-
 
 # Snake
 Only moves orthogonally at a fixed speed. No momentum conservation. Accelerates the longer it moves in a straight line.

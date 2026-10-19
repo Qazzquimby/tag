@@ -1,37 +1,10 @@
 import { AbilitySlot, Shape } from "../config.js";
-import { bodies } from "../collision.js";
-import { castRay } from "../vision.js";
 import { createHook, hookId } from "../entities/hook.js";
 
-const RANGE = 450;
 const PULL_ACCEL = 1600;
 const PULL_MAX_SPEED = 550;
 const ATTACH_MARGIN = 6;
 const HOOK_COOLDOWN = 0.3;
-
-function rayCircleDistance(origin, dir, circle) {
-  const toX = circle.x - origin.x;
-  const toY = circle.y - origin.y;
-  const along = toX * dir.x + toY * dir.y;
-  if (along < 0) return null;
-
-  const offsetSq = toX * toX + toY * toY - along * along;
-  if (offsetSq > circle.radius * circle.radius) return null;
-  return Math.max(0, along - Math.sqrt(circle.radius * circle.radius - offsetSq));
-}
-
-function findHit(game, self, dir) {
-  let hit = {
-    distance: castRay(game.world.map, self.x, self.y, dir.x, dir.y, RANGE),
-    targetId: null,
-  };
-  for (const body of bodies(game)) {
-    if (body.id === self.id || !body.collides || !body.interactive) continue;
-    const distance = rayCircleDistance(self, dir, body);
-    if (distance !== null && distance < hit.distance) hit = { distance, targetId: body.id };
-  }
-  return hit;
-}
 
 function fire(slot) {
   return ({ self, controls, game }) => {
@@ -40,14 +13,9 @@ function fire(slot) {
     const length = Math.hypot(dx, dy);
     if (length === 0) return false;
 
-    const dir = { x: dx / length, y: dy / length };
-    const hit = findHit(game, self, dir);
-    if (!hit.targetId && hit.distance >= RANGE) return false;
-
     const id = hookId(self.id, slot);
-    const x = self.x + dir.x * hit.distance;
-    const y = self.y + dir.y * hit.distance;
-    game.entities.set(id, createHook(self, id, x, y, hit.targetId));
+    const dir = { x: dx / length, y: dy / length };
+    game.entities.set(id, createHook(self, id, self.x, self.y, dir));
   };
 }
 
@@ -83,7 +51,7 @@ const grapple = {
         game.entities.delete(id);
         continue;
       }
-      pull(self, hook, dt);
+      if (!hook.flying) pull(self, hook, dt);
     }
   },
   primary: {
