@@ -7,8 +7,8 @@ import stickyLaunchSound from "../assets/sfx/demoman/sticky_launch.mp3";
 const THROW_COOLDOWN = 1;
 const DETONATE_COOLDOWN = 0.5;
 const THROW_MAX_DISTANCE = 250;
-const BLAST_RADIUS = 150;
-const BLAST_IMPULSE = 1500;
+const BLAST_RADIUS = 160;
+const BLAST_IMPULSE = 2000;
 const BLAST_STUN_S = 0.35;
 
 function armedBombs(self, game) {

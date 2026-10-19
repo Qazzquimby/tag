@@ -8,10 +8,10 @@ import explosionSound from "../assets/sfx/demoman/sticky_detonate.mp3";
 const ROCKET_RADIUS = 6;
 const ROCKET_SPRITE = "🚀";
 const ROCKET_FONT_SIZE = 16;
-const BLAST = Object.freeze({ radius: 130, impulse: 1100, stun: 0.25 });
+const BLAST = Object.freeze({ radius: 150, impulse: 1200, stun: 0.25 });
 
 export const EXPLODE_SPEED = 80;
-export const ROCKET_FRICTION = 5;
+export const ROCKET_FRICTION = 16;
 
 export function createRocket(owner, id, vx, vy) {
   return createEntity({

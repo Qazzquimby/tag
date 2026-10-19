@@ -2,9 +2,9 @@ import { Shape } from "../config.js";
 import { moveWithCollision } from "../collision.js";
 
 const ENGINE_ACCEL = 700;
-const MAX_SPEED = 380;
-const REVERSE_SPEED = 120;
-const STEER_RATE = 2.6;
+const MAX_SPEED = 420;
+const REVERSE_SPEED = 150;
+const STEER_RATE = 3.0;
 const FULL_STEER_SPEED = 120;
 const ROLL_FRICTION = 0.6;
 const GRIP = 10;

@@ -125,7 +125,7 @@ export const SCORE_FOOD = 6;
 
 export const DEAD_S = 3;
 export const SPAWN_INVULNERABLE_S = 3;
-export const EAT_INVULNERABLE_S = 2;
+export const EAT_INVULNERABLE_S = 0.5;
 export const SPAWN_WARNING_S = 1.5;
 export const FOOD_WARNING_S = 1.5;
 
@@ -133,9 +133,9 @@ export const ROUND_S = 90;
 export const ROUND_RESULT_S = 10;
 export const ROUND_WARNING_S = 15;
 
-export const FOOD_INTERVAL_S = 3;
-export const FOOD_MAX = 12;
-export const FOOD_PER_PLAYER = 4;
+export const FOOD_INTERVAL_S = 6;
+export const FOOD_MAX = 4;
+export const FOOD_PER_PLAYER = 3;
 export const FOOD_RADIUS = 7;
 export const ENTITY_FRICTION = 4;
 
