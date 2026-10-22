@@ -102,6 +102,7 @@ const demoman = {
           stickyDetonateSound,
           bomb,
           game.players.get(game.localId),
+          {volume: 0.3}
         );
         game.entities.delete(bomb.id);
       }

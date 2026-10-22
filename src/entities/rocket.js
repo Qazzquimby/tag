@@ -5,6 +5,8 @@ import { canSee } from "../vision.js";
 import { createEntity } from "./entity.js";
 import explosionSound from "../assets/sfx/demoman/sticky_detonate.mp3";
 
+// todo right now rocket audio only plays for owner
+
 const ROCKET_RADIUS = 6;
 const ROCKET_SPRITE = "🚀";
 const ROCKET_FONT_SIZE = 16;
@@ -31,7 +33,7 @@ export function createRocket(owner, id, vx, vy) {
 
 function explode(rocket, game, net) {
   applyBlast(game, net, rocket.ownerId, [rocket], BLAST);
-  game.sfx.play(explosionSound, rocket, game.players.get(game.localId));
+  game.sfx.play(explosionSound, rocket, game.players.get(game.localId), {volume: 0.3});
   game.entities.delete(rocket.id);
 }
 

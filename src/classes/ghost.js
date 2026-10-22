@@ -4,7 +4,7 @@ import {nearestFreePoint} from "../collision.js";
 import {relationTo} from "../ranking.js";
 import booSound from "../assets/sfx/ghost/boo.mp3";
 
-const GHOST_CHARGE_S = 3;
+const GHOST_CHARGE_S = 2;
 const GHOST_RECHARGE_RATE = 2;
 const FEAR_S = 0.5;
 const FEAR_RADIUS = 160;

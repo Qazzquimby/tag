@@ -2,9 +2,9 @@ import { Shape } from "../config.js";
 import { createRocket, EXPLODE_SPEED, ROCKET_FRICTION } from "../entities/rocket.js";
 import launchSound from "../assets/sfx/demoman/sticky_launch.mp3";
 
-const LAUNCH_COOLDOWN = 1.2;
+const LAUNCH_COOLDOWN = 1.6;
 const MIN_LAUNCH_SPEED = 100;
-const MAX_LAUNCH_DISTANCE = 600;
+const MAX_LAUNCH_DISTANCE = 500;
 
 const rocketJumper = {
   name: "Rocket Jumper",
@@ -13,7 +13,7 @@ const rocketJumper = {
   radius: 12,
   accel: 1300,
   maxSpeed: 210,
-  friction: 4,
+  friction: 3,
   primary: {
     label: "Rocket",
     sound: launchSound,

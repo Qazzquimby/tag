@@ -4,6 +4,9 @@ import { createPortal } from "../entities/portal.js";
 
 const PLACE_COOLDOWN = 0.5;
 
+// todo portals dont despawn for other players
+// portals should only be placed within vision
+
 function placePortal(kind) {
   return ({ self, controls, game }) => {
     const map = game.world.map;

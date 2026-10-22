@@ -12,6 +12,8 @@ import { randomFreePosition } from "../map.js";
 import { createEntity } from "./entity.js";
 import eatFoodSound from "../assets/sfx/eat_food.mp3";
 
+// todo food should have physics, synced for all players
+
 export function createFood(id, x, y, warningLeft = FOOD_WARNING_S) {
   return createEntity({
     id,

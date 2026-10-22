@@ -135,7 +135,7 @@ export const ROUND_S = 90;
 export const ROUND_RESULT_S = 10;
 export const ROUND_WARNING_S = 15;
 
-export const FOOD_INTERVAL_S = 6;
+export const FOOD_INTERVAL_S = 7;
 export const FOOD_MAX = 4;
 export const FOOD_PER_PLAYER = 3;
 export const FOOD_RADIUS = 7;

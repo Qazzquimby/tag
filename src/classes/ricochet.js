@@ -2,7 +2,7 @@ import { Shape, Status } from "../config.js";
 import { isSolid } from "../map.js";
 import { requestWallEdit } from "../wall-edits.js";
 
-const DASH_SPEED = 900;
+const DASH_SPEED = 1000;
 const WALL_EDIT_S = 4;
 
 function isCellOccupied(game, col, row) {
@@ -22,12 +22,12 @@ const ricochet = {
   symbol: "🎱",
   radius: 11,
   accel: 250,
-  maxSpeed: 140,
-  friction: 0.8,
+  maxSpeed: 150,
+  friction: 0.7,
   bounce: 0.95,
   primary: {
     label: "Dash",
-    cooldown: 1.5,
+    cooldown: 2.5,
     use({ self, controls }) {
       const dx = controls.aim.x - self.x;
       const dy = controls.aim.y - self.y;
@@ -39,7 +39,7 @@ const ricochet = {
   },
   secondary: {
     label: "Wall",
-    cooldown: 1,
+    cooldown: 4,
     use({ self, controls, game, net }) {
       const map = game.world.map;
       const col = Math.floor(controls.aim.x / map.cell);
