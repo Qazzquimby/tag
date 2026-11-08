@@ -1,4 +1,4 @@
-import { EntityKind, ENTITY_FRICTION, NetEvent, Shape, Status } from "../config.js";
+import { EntityKind, NetEvent, Shape, Status } from "../config.js";
 import {createStickyBomb, STICKY_BOMB_FRICTION} from "../entities/sticky-bomb.js";
 import { applyKnockback } from "../player.js";
 import stickyDetonateSound from "../assets/sfx/demoman/sticky_detonate.mp3";
